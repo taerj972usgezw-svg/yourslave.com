@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>고양시 버스 문제 탐구 - 시민을 위한 대중교통 개선 플랫폼</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #4CAF50;
+            --primary-light: #81C784;
+            --secondary: #FF9800;
+            --accent: #2196F3;
+            --light-bg: #F1F8E9;
+            --text-dark: #2E7D32;
+            --text-light: #FFFFFF;
+            --card-bg: #FFFFFF;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--light-bg) 0%, #E8F5E9 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: var(--text-light);
+            padding: 2rem 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .bus-animation {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 60px;
+            height: 30px;
+            background: var(--text-light);
+            border-radius: 8px;
+            animation: busMove 8s linear infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        @keyframes busMove {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(calc(100vw + 100px)); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: var(--shadow);
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1, h2, h3 {
+            margin-bottom: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        h2 {
+            font-size: 2rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            color: var(--secondary);
+            margin-top: 1.5rem;
+        }
+
+        .problem-card {
+            background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-left: 4px solid var(--secondary);
+            transition: transform 0.3s ease;
+        }
+
+        .problem-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .problem-card i {
+            font-size: 2rem;
+            color: var(--secondary);
+            margin-right: 1rem;
+        }
+
+        .chart-container {
+            height: 300px;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .bus-timeline {
+            display: flex;
+            align-items: center;
+            height: 60px;
+            background: #E3F2FD;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--accent);
+            z-index: 2;
+        }
+
+        .bus-dot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: translateY(-50%) scale(1); }
+            50% { transform: translateY(-50%) scale(1.2); }
+            100% { transform: translateY(-50%) scale(1); }
+        }
+
+        .feedback-section {
+            background: linear-gradient(135deg, #E1F5FE 0%, #B3E5FC 100%);
+        }
+
+        .feedback-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        textarea, select {
+            padding: 1rem;
+            border: 2px solid #B2DFDB;
+            border-radius: 10px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border-top: 4px solid var(--accent);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            color: var(--text-dark);
+            font-size: 1rem;
+        }
+
+        .citizen-quotes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .quote-card {
+            background: #F5F5F5;
+            padding: 1.5rem;
+            border-radius: 15px;
+            border-left: 4px solid var(--primary);
+            position: relative;
+        }
+
+        .quote-card:before {
+            content: """;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 3rem;
+            color: var(--primary-light);
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background: var(--text-dark);
+            color: var(--text-light);
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .bus-animation {
+                width: 40px;
+                height: 20px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="bus-animation">
+            <i class="fas fa-bus"></i>
+        </div>
+        <div class="header-content">
+            <h1>고양시 버스 문제 탐구</h1>
+            <p>시민의 목소리로 만드는 더 나은 대중교통</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="section">
+            <h2><i class="fas fa-chart-line"></i> 고양시 버스 현황 개요</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">42분</div>
+                    <div class="stat-label">평균 배차 간격</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">68%</div>
+                    <div class="stat-label">불만족 응답률</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">23분</div>
+                    <div class="stat-label">평균 대기 시간</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">15%</div>
+                    <div class="stat-label">정보 오류율</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2><i class="fas fa-exclamation-triangle"></i> 주요 문제점 분석</h2>
+            
+            <div class="problem-card">
+                <h3><i class="fas fa-clock"></i> 배차 간격 불규칙</h3>
+                <p>고양시 버스는 평균 42분 간격으로 운행되지만, 실제 대기 시간은 10분에서 90분까지 다양합니다. 특히 저녁 시간대에는 배차 간격이 더욱 불규칙해집니다.</p>
+                
+                <div class="chart-container">
+                    <div class="bus-timeline" id="timeline1">
+                        <div class="timeline-marker" style="left: 10%;"></div>
+                        <div class="timeline-marker" style="left: 35%;"></div>
+                        <div class="timeline-marker" style="left: 85%;"></div>
+                        <div class="bus-dot" style="left: 10%;"></div>
+                        <div class="bus-dot" style="left: 35%;"></div>
+                        <div class="bus-dot" style="left: 85%;"></div>
+                    </div>
+                    <p style="text-align: center; margin-top: 10px; font-size: 0.9rem; color: #666;">버스 도착 시간의 불규칙성 (1시간 내)</p>
+                </div>
+            </div>
+
+            <div class="problem-card">
+                <h3><i class="fas fa-users"></i> 시간대별 버스 몰림 현상</h3>
+                <p>출퇴근 시간에는 버스가 과도하게 몰리고, 평상시에는 거의 운행되지 않는 문제가 발생합니다. 이로 인해 혼잡도와 대기 시간의 극단적인 차이가 발생합니다.</p>
+                
+                <div class="chart-container">
+                    <canvas id="congestionChart" width="800" height="200"></canvas>
+                </div>
+            </div>
+
+            <div class="problem-card">
+                <h3><i class="fas fa-random"></i> 환승 불편</h3>
+                <p>고양시 내 주요 환승 정류장에서의 평균 대기 시간은 23분입니다. 환승 정보의 부정확성과 배차 시간의 불일치로 인해 시민들이 불편을 겪고 있습니다.</p>
+            </div>
+
+            <div class="problem-card">
+                <h3><i class="fas fa-map-marker-alt"></i> GPS 및 정보 부정확</h3>
+                <p>버스 위치 정보의 오류율이 15%에 달하며, 정류장 도착 예정 시간이 실제와 10분 이상 차이 나는 경우가 흔합니다. 이로 인해 시민들이 불필요하게 대기하거나 버스를 놓치는 문제가 발생합니다.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2><i class="fas fa-comments"></i> 시민들의 실제 목소리</h2>
+            <div class="citizen-quotes">
+                <div class="quote-card">
+                    <p>"퇴근 시간에 버스를 50분이나 기다렸어요. 앱에는 10분 후 도착이라고 나오는데 실제는 전혀 달랐습니다."</p>
+                    <p style="text-align: right; margin-top: 1rem; font-weight: 600;">- 덕양구 김모씨</p>
+                </div>
+                <div class="quote-card">
+                    <p>"아이와 함께 버스를 기다리다 비를 맞았어요. 실시간 정보가 정확했다면 우산을 챙겼을 텐데..."</p>
+                    <p style="text-align: right; margin-top: 1rem; font-weight: 600;">- 일산동구 이모씨</p>
+                </div>
+                <div class="quote-card">
+                    <p>"환승하려고 30분을 기다렸는데, 다음 버스가 오지 않아서 결국 택시를 탔어요. 환승 시스템이 개선되어야 합니다."</p>
+                    <p style="text-align: right; margin-top: 1rem; font-weight: 600;">- 일산서구 박모씨</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section feedback-section">
+            <h2><i class="fas fa-comment-dots"></i> 당신은 이 문제를 어떻게 느끼나요?</h2>
+            <p>고양시 버스에 대한 당신의 경험과 의견을 공유해주세요. 시민의 목소리가 변화를 만듭니다!</p>
+            
+            <form class="feedback-form" id="feedbackForm">
+                <select id="problemType" required>
+                    <option value="">문제 유형을 선택해주세요</option>
+                    <option value="배차간격">배차 간격 불규칙</option>
+                    <option value="혼잡도">시간대별 버스 몰림</option>
+                    <option value="환승">환승 불편</option>
+                    <option value="정보오류">GPS/정보 부정확</option>
+                    <option value="기타">기타 의견</option>
+                </select>
+                
+                <textarea id="feedbackText" placeholder="당신의 경험과 개선 제안을 자유롭게 작성해주세요..." required></textarea>
+                
+                <button type="submit">
+                    <i class="fas fa-paper-plane"></i> 의견 제출하기
+                </button>
+            </form>
+        </section>
+    </div>
+
+    <footer>
+        <p>고양시 버스 문제 탐구 프로젝트 | 시민 참여로 만드는 더 나은 대중교통</p>
+        <p>이 페이지는 학생 과제용으로 제작되었습니다.</p>
+    </footer>
+
+    <script>
+        // 간단한 차트 데이터 시각화
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('congestionChart');
+            const ctx = canvas.getContext('2d');
+            
+            // 시간대별 혼잡도 데이터 (가상 데이터)
+            const hours = ['6시', '7시', '8시', '9시', '10시', '11시', '12시', '13시', '14시', '15시', '16시', '17시', '18시', '19시'];
+            const congestion = [30, 85, 92, 45, 25, 20, 35, 28, 22, 24, 38, 78, 88, 65];
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 40;
+            const barWidth = (width - 2 * padding) / hours.length - 5;
+            
+            // 배경
+            ctx.fillStyle = '#F5F5F5';
+            ctx.fillRect(0, 0, width, height);
+            
+            // 축 그리기
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+            
+            // 막대 그래프 그리기
+            for (let i = 0; i < hours.length; i++) {
+                const x = padding + i * ((width - 2 * padding) / hours.length);
+                const barHeight = (congestion[i] / 100) * (height - 2 * padding);
+                const y = height - padding - barHeight;
+                
+                // 색상 설정 (혼잡도에 따라)
+                if (congestion[i] > 80) {
+                    ctx.fillStyle = '#FF5252'; // 매우 혼잡
+                } else if (congestion[i] > 60) {
+                    ctx.fillStyle = '#FF9800'; // 혼잡
+                } else if (congestion[i] > 40) {
+                    ctx.fillStyle = '#FFD740'; // 보통
+                } else {
+                    ctx.fillStyle = '#4CAF50'; // 여유
+                }
+                
+                ctx.fillRect(x, y, barWidth, barHeight);
+                
+                // 시간 라벨
+                ctx.fillStyle = '#666';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(hours[i], x + barWidth/2, height - padding + 15);
+            }
+            
+            // Y축 라벨
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'right';
+            ctx.fillText('100%', padding - 10, padding);
+            ctx.fillText('50%', padding - 10, height/2);
+            ctx.fillText('0%', padding - 10, height - padding);
+            
+            // 제목
+            ctx.fillStyle = '#2E7D32';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('시간대별 버스 혼잡도 (%)', width/2, 20);
+            
+            // 폼 제출 이벤트
+            document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('의견이 성공적으로 제출되었습니다! 시민의 목소리가 고양시 버스 개선에 큰 도움이 됩니다.');
+                this.reset();
+            });
+            
+            // 버스 애니메이션 추가
+            createBusAnimations();
+        });
+        
+        function createBusAnimations() {
+            const timelines = document.querySelectorAll('.bus-timeline');
+            timelines.forEach((timeline, index) => {
+                // 기존 점 제거
+                const existingDots = timeline.querySelectorAll('.bus-dot');
+                existingDots.forEach(dot => dot.remove());
+                
+                // 새로운 점 생성 (랜덤 위치)
+                const dotCount = Math.floor(Math.random() * 3) + 2;
+                for (let i = 0; i < dotCount; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'bus-dot';
+                    const left = Math.random() * 90 + 5; // 5% ~ 95%
+                    dot.style.left = `${left}%`;
+                    dot.style.animationDelay = `${i * 0.5}s`;
+                    timeline.appendChild(dot);
+                }
+            });
+        }
+        
+        // 주기적으로 버스 애니메이션 업데이트
+        setInterval(createBusAnimations, 5000);
+    </script>
+</body>
+</html>
