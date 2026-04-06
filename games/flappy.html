@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flappy Bird - Neon</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0a0a1a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  font-family: 'Press Start 2P', cursive;
+  overflow: hidden;
+}
+#top-bar {
+  width: 100%;
+  max-width: 480px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+#top-bar a {
+  color: #ff00ff;
+  text-decoration: none;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+  text-shadow: 0 0 8px #ff00ff, 0 0 16px #ff00ff;
+  transition: text-shadow 0.2s;
+}
+#top-bar a:hover {
+  text-shadow: 0 0 12px #ff00ff, 0 0 24px #ff00ff, 0 0 36px #ff00ff;
+}
+#score-display {
+  color: #ff00ff;
+  font-size: 10px;
+  text-shadow: 0 0 8px #ff00ff, 0 0 16px #ff00ff;
+}
+#game-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+canvas {
+  display: block;
+  border: 2px solid #ff00ff;
+  box-shadow: 0 0 15px #ff00ff, 0 0 30px rgba(255,0,255,0.3), inset 0 0 15px rgba(255,0,255,0.1);
+  border-radius: 4px;
+}
+#overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 5;
+}
+#overlay.active { pointer-events: auto; }
+#overlay-content {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 30px;
+  background: rgba(10,10,26,0.92);
+  border: 2px solid #ff00ff;
+  border-radius: 8px;
+  box-shadow: 0 0 20px #ff00ff, 0 0 40px rgba(255,0,255,0.3);
+}
+#overlay.active #overlay-content { display: flex; }
+#overlay-title {
+  color: #ff00ff;
+  font-size: 18px;
+  text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
+}
+#overlay-score {
+  color: #fff;
+  font-size: 12px;
+  text-shadow: 0 0 6px rgba(255,255,255,0.5);
+}
+#overlay-best {
+  color: #aaa;
+  font-size: 10px;
+}
+#play-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 11px;
+  padding: 14px 28px;
+  background: transparent;
+  color: #ff00ff;
+  border: 2px solid #ff00ff;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 0 10px #ff00ff, 0 0 20px rgba(255,0,255,0.3);
+  transition: all 0.2s;
+}
+#play-btn:hover {
+  background: rgba(255,0,255,0.15);
+  box-shadow: 0 0 15px #ff00ff, 0 0 30px rgba(255,0,255,0.5);
+}
+#start-hint {
+  color: #888;
+  font-size: 9px;
+  text-align: center;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+<div id="top-bar">
+  <a href="../index.html">&larr; 허브로 돌아가기</a>
+  <div id="score-display">점수: <span id="hud-score">0</span></div>
+</div>
+<div id="game-wrapper">
+  <canvas id="game"></canvas>
+  <div id="overlay" class="active">
+    <div id="overlay-content">
+      <div id="overlay-title">플래피 버드</div>
+      <div id="overlay-score"></div>
+      <div id="overlay-best"></div>
+      <button id="play-btn">시작하기</button>
+      <div id="start-hint">스페이스바 또는 클릭으로<br>새를 날려보세요!</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const overlayTitle = document.getElementById('overlay-title');
+const overlayScore = document.getElementById('overlay-score');
+const overlayBest = document.getElementById('overlay-best');
+const playBtn = document.getElementById('play-btn');
+const startHint = document.getElementById('start-hint');
+const hudScore = document.getElementById('hud-score');
+
+// Canvas sizing
+function resize() {
+  const wrapper = document.getElementById('game-wrapper');
+  const maxW = 480, maxH = 720;
+  const w = Math.min(wrapper.clientWidth - 16, maxW);
+  const h = Math.min(window.innerHeight - 80, maxH);
+  canvas.width = w;
+  canvas.height = h;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// Game constants
+const GRAVITY = 0.45;
+const JUMP_VEL = -7.5;
+const PIPE_WIDTH = 52;
+const PIPE_GAP = 150;
+const PIPE_SPEED = 2.8;
+const PIPE_SPAWN_INTERVAL = 1600;
+const BIRD_SIZE = 20;
+
+// Game state
+let bird, pipes, score, bestScore, gameState, lastPipeTime, animFrame;
+bestScore = parseInt(localStorage.getItem('flappy_best') || '0');
+
+// Stars for background
+let stars = [];
+function initStars() {
+  stars = [];
+  for (let i = 0; i < 60; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.5 + 0.5,
+      a: Math.random() * 0.6 + 0.2,
+      speed: Math.random() * 0.3 + 0.1
+    });
+  }
+}
+
+function init() {
+  bird = {
+    x: canvas.width * 0.25,
+    y: canvas.height / 2,
+    vy: 0,
+    rotation: 0,
+    flapFrame: 0
+  };
+  pipes = [];
+  score = 0;
+  lastPipeTime = 0;
+  hudScore.textContent = '0';
+  initStars();
+}
+
+function jump() {
+  if (gameState === 'idle') {
+    gameState = 'playing';
+    overlay.classList.remove('active');
+    bird.vy = JUMP_VEL;
+    lastPipeTime = performance.now();
+  } else if (gameState === 'playing') {
+    bird.vy = JUMP_VEL;
+  }
+}
+
+// Input
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); jump(); }
+});
+canvas.addEventListener('click', jump);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); jump(); }, { passive: false });
+playBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  if (gameState === 'dead') {
+    init();
+    gameState = 'idle';
+    overlayTitle.textContent = '플래피 버드';
+    overlayScore.textContent = '';
+    overlayBest.textContent = '';
+    playBtn.textContent = '시작하기';
+    startHint.style.display = '';
+  }
+  jump();
+});
+
+function spawnPipe(now) {
+  const minTop = 60;
+  const maxTop = canvas.height - PIPE_GAP - 60;
+  const topH = Math.random() * (maxTop - minTop) + minTop;
+  pipes.push({
+    x: canvas.width,
+    topH: topH,
+    scored: false
+  });
+  lastPipeTime = now;
+}
+
+function update(now) {
+  if (gameState !== 'playing') return;
+
+  // Bird physics
+  bird.vy += GRAVITY;
+  bird.y += bird.vy;
+  bird.rotation = Math.min(Math.max(bird.vy * 3, -30), 70);
+  bird.flapFrame += 0.15;
+
+  // Spawn pipes
+  if (now - lastPipeTime > PIPE_SPAWN_INTERVAL) {
+    spawnPipe(now);
+  }
+
+  // Move pipes
+  for (let i = pipes.length - 1; i >= 0; i--) {
+    pipes[i].x -= PIPE_SPEED;
+    // Score
+    if (!pipes[i].scored && pipes[i].x + PIPE_WIDTH < bird.x) {
+      pipes[i].scored = true;
+      score++;
+      hudScore.textContent = score;
+    }
+    // Remove off-screen
+    if (pipes[i].x + PIPE_WIDTH < -10) {
+      pipes.splice(i, 1);
+    }
+  }
+
+  // Collision: ground/ceiling
+  if (bird.y - BIRD_SIZE / 2 < 0 || bird.y + BIRD_SIZE / 2 > canvas.height) {
+    die();
+    return;
+  }
+
+  // Collision: pipes
+  const bx = bird.x, by = bird.y, br = BIRD_SIZE / 2 - 2;
+  for (const p of pipes) {
+    if (bx + br > p.x && bx - br < p.x + PIPE_WIDTH) {
+      if (by - br < p.topH || by + br > p.topH + PIPE_GAP) {
+        die();
+        return;
+      }
+    }
+  }
+}
+
+function die() {
+  gameState = 'dead';
+  if (score > bestScore) {
+    bestScore = score;
+    localStorage.setItem('flappy_best', bestScore);
+  }
+  overlayTitle.textContent = '게임 오버';
+  overlayScore.textContent = '점수: ' + score;
+  overlayBest.textContent = '최고 점수: ' + bestScore;
+  playBtn.textContent = '다시 하기';
+  startHint.style.display = 'none';
+  overlay.classList.add('active');
+}
+
+// Drawing
+function drawBg() {
+  ctx.fillStyle = '#0a0a1a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Stars
+  for (const s of stars) {
+    s.x -= s.speed;
+    if (s.x < 0) { s.x = canvas.width; s.y = Math.random() * canvas.height; }
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+    ctx.fill();
+  }
+
+  // Ground line
+  ctx.strokeStyle = '#ff00ff';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = '#ff00ff';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height - 1);
+  ctx.lineTo(canvas.width, canvas.height - 1);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Ceiling line
+  ctx.beginPath();
+  ctx.moveTo(0, 1);
+  ctx.lineTo(canvas.width, 1);
+  ctx.stroke();
+}
+
+function drawPipe(p) {
+  const grad = ctx.createLinearGradient(p.x, 0, p.x + PIPE_WIDTH, 0);
+  grad.addColorStop(0, '#1a0033');
+  grad.addColorStop(0.5, '#2a0050');
+  grad.addColorStop(1, '#1a0033');
+
+  // Top pipe
+  ctx.fillStyle = grad;
+  ctx.fillRect(p.x, 0, PIPE_WIDTH, p.topH);
+  // Bottom pipe
+  ctx.fillRect(p.x, p.topH + PIPE_GAP, PIPE_WIDTH, canvas.height - p.topH - PIPE_GAP);
+
+  // Neon borders
+  ctx.shadowColor = '#ff00ff';
+  ctx.shadowBlur = 12;
+  ctx.strokeStyle = '#ff00ff';
+  ctx.lineWidth = 2;
+
+  // Top pipe border
+  ctx.strokeRect(p.x, 0, PIPE_WIDTH, p.topH);
+  // Top pipe cap
+  ctx.fillStyle = '#2a0050';
+  ctx.fillRect(p.x - 4, p.topH - 16, PIPE_WIDTH + 8, 16);
+  ctx.strokeRect(p.x - 4, p.topH - 16, PIPE_WIDTH + 8, 16);
+
+  // Bottom pipe border
+  ctx.strokeRect(p.x, p.topH + PIPE_GAP, PIPE_WIDTH, canvas.height - p.topH - PIPE_GAP);
+  // Bottom pipe cap
+  ctx.fillStyle = '#2a0050';
+  ctx.fillRect(p.x - 4, p.topH + PIPE_GAP, PIPE_WIDTH + 8, 16);
+  ctx.strokeRect(p.x - 4, p.topH + PIPE_GAP, PIPE_WIDTH + 8, 16);
+
+  ctx.shadowBlur = 0;
+}
+
+function drawBird() {
+  ctx.save();
+  ctx.translate(bird.x, bird.y);
+  ctx.rotate(bird.rotation * Math.PI / 180);
+
+  // Glow
+  ctx.shadowColor = '#ff00ff';
+  ctx.shadowBlur = 15;
+
+  // Body
+  ctx.fillStyle = '#ff00ff';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, BIRD_SIZE / 2 + 2, BIRD_SIZE / 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Inner body
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#ff44ff';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, BIRD_SIZE / 2 - 2, BIRD_SIZE / 2 - 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eye
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(6, -4, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#0a0a1a';
+  ctx.beginPath();
+  ctx.arc(7, -4, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Beak
+  ctx.fillStyle = '#ffcc00';
+  ctx.beginPath();
+  ctx.moveTo(BIRD_SIZE / 2 + 2, -2);
+  ctx.lineTo(BIRD_SIZE / 2 + 10, 1);
+  ctx.lineTo(BIRD_SIZE / 2 + 2, 4);
+  ctx.closePath();
+  ctx.fill();
+
+  // Wing
+  const wingY = Math.sin(bird.flapFrame * 6) * 4;
+  ctx.fillStyle = '#cc00cc';
+  ctx.beginPath();
+  ctx.ellipse(-4, wingY + 2, 8, 5, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function draw(now) {
+  drawBg();
+  for (const p of pipes) drawPipe(p);
+  drawBird();
+}
+
+function loop(now) {
+  update(now);
+  draw(now);
+  animFrame = requestAnimationFrame(loop);
+}
+
+// Start
+gameState = 'idle';
+init();
+animFrame = requestAnimationFrame(loop);
+</script>
+</body>
+</html>
