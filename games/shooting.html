@@ -18,45 +18,32 @@ body {
   height: 100vh;
   transition: background 0.3s, color 0.3s;
 }
-
-/* Theme variables */
-:root {
+body.dark {
   --bg: #0a0a1a;
-  --bg-translucent: #0a0a1aee;
   --accent: #00ff41;
-  --accent-hover: #33ff66;
-  --accent-dim: #00ff41aa;
-  --accent-glow22: #00ff4122;
-  --accent-glow33: #00ff4133;
-  --accent-glow55: #00ff4155;
-  --accent-glow88: #00ff4188;
-  --accent-glowcc: #00ff41cc;
-  --accent-glow08: #00ff4108;
+  --accent-dim: #00ff4188;
+  --accent-vdim: #00ff4133;
+  --accent-glow: #00ff4122;
+  --accent-bg: #0a0a1aee;
   --canvas-bg: #0a0a1a;
-  --text-btn: #0a0a1a;
-  --star-alpha-mult: 1;
-  --border-color: #00ff4133;
+  --text-secondary: #00ff41aa;
+  --btn-text: #0a0a1a;
+  --overlay-bg: #0a0a1aee;
   --hud-color: #00ff41;
 }
-body.light-mode {
+body.light {
   --bg: #e8eaf6;
-  --bg-translucent: #e8eaf6ee;
-  --accent: #007a1f;
-  --accent-hover: #009a2f;
-  --accent-dim: #007a1faa;
-  --accent-glow22: #007a1f22;
-  --accent-glow33: #007a1f33;
-  --accent-glow55: #007a1f55;
-  --accent-glow88: #007a1f88;
-  --accent-glowcc: #007a1fcc;
-  --accent-glow08: #007a1f08;
-  --canvas-bg: #d0d3e8;
-  --text-btn: #e8eaf6;
-  --star-alpha-mult: 0.4;
-  --border-color: #007a1f44;
-  --hud-color: #007a1f;
+  --accent: #1b5e20;
+  --accent-dim: #1b5e2088;
+  --accent-vdim: #1b5e2033;
+  --accent-glow: #1b5e2022;
+  --accent-bg: #e8eaf6ee;
+  --canvas-bg: #c5cae9;
+  --text-secondary: #1b5e20aa;
+  --btn-text: #e8eaf6;
+  --overlay-bg: #e8eaf6ee;
+  --hud-color: #1b5e20;
 }
-
 #top-bar {
   width: 100%;
   padding: 10px 20px;
@@ -75,36 +62,38 @@ body.light-mode {
 #top-bar a:hover {
   text-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent);
 }
+.top-right-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.toggle-btn {
+  background: none;
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  line-height: 1;
+}
+.toggle-btn:hover {
+  border-color: var(--accent);
+  text-shadow: 0 0 8px var(--accent);
+}
 #hud {
   display: flex;
   gap: 30px;
   font-size: 11px;
-  align-items: center;
   color: var(--hud-color);
 }
 #hud span { white-space: nowrap; }
-.toggle-btn {
-  background: none;
-  border: 1px solid var(--accent-glow55);
-  color: var(--accent);
-  font-size: 18px;
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-.toggle-btn:hover {
-  border-color: var(--accent);
-  box-shadow: 0 0 10px var(--accent-glow55);
-}
 canvas {
   display: block;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 0 20px var(--accent-glow22), inset 0 0 20px var(--accent-glow08);
+  border: 1px solid var(--accent-vdim);
+  box-shadow: 0 0 20px var(--accent-glow), inset 0 0 20px var(--accent-glow);
 }
 #game-over-screen {
   display: none;
@@ -113,10 +102,10 @@ canvas {
   transform: translate(-50%, -50%);
   text-align: center;
   z-index: 20;
-  background: var(--bg-translucent);
+  background: var(--overlay-bg);
   padding: 40px 50px;
   border: 2px solid var(--accent);
-  box-shadow: 0 0 30px var(--accent-glow55), inset 0 0 30px var(--accent-glow22);
+  box-shadow: 0 0 30px var(--accent-dim), inset 0 0 30px var(--accent-glow);
   border-radius: 4px;
 }
 #game-over-screen h1 {
@@ -135,22 +124,21 @@ canvas {
 #game-over-screen .best-score {
   font-size: 11px;
   margin-bottom: 30px;
-  color: var(--accent-dim);
+  color: var(--text-secondary);
 }
 #play-again-btn {
   font-family: 'Press Start 2P', monospace;
   font-size: 14px;
-  color: var(--text-btn);
+  color: var(--btn-text);
   background: var(--accent);
   border: none;
   padding: 15px 30px;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 0 15px var(--accent-glow88);
+  box-shadow: 0 0 15px var(--accent-dim);
 }
 #play-again-btn:hover {
-  background: var(--accent-hover);
-  box-shadow: 0 0 30px var(--accent-glowcc);
+  box-shadow: 0 0 30px var(--accent);
   transform: scale(1.05);
 }
 #start-screen {
@@ -159,10 +147,10 @@ canvas {
   transform: translate(-50%, -50%);
   text-align: center;
   z-index: 20;
-  background: var(--bg-translucent);
+  background: var(--overlay-bg);
   padding: 40px 50px;
   border: 2px solid var(--accent);
-  box-shadow: 0 0 30px var(--accent-glow55);
+  box-shadow: 0 0 30px var(--accent-dim);
   border-radius: 4px;
 }
 #start-screen h1 {
@@ -176,22 +164,21 @@ canvas {
   font-size: 10px;
   line-height: 2;
   margin-bottom: 25px;
-  color: var(--accent-dim);
+  color: var(--text-secondary);
 }
 #start-btn {
   font-family: 'Press Start 2P', monospace;
   font-size: 14px;
-  color: var(--text-btn);
+  color: var(--btn-text);
   background: var(--accent);
   border: none;
   padding: 15px 30px;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 0 15px var(--accent-glow88);
+  box-shadow: 0 0 15px var(--accent-dim);
 }
 #start-btn:hover {
-  background: var(--accent-hover);
-  box-shadow: 0 0 30px var(--accent-glowcc);
+  box-shadow: 0 0 30px var(--accent);
   transform: scale(1.05);
 }
 #mobile-controls {
@@ -209,8 +196,8 @@ canvas {
 }
 .mobile-btn {
   width: 56px; height: 56px;
-  background: var(--accent-glow22);
-  border: 2px solid var(--accent-glow55);
+  background: var(--accent-glow);
+  border: 2px solid var(--accent-dim);
   border-radius: 8px;
   color: var(--accent);
   font-size: 22px;
@@ -221,7 +208,7 @@ canvas {
   -webkit-user-select: none;
   touch-action: manipulation;
 }
-.mobile-btn:active { background: var(--accent-glow55); }
+.mobile-btn:active { background: var(--accent-dim); }
 .mobile-btn.fire-btn {
   width: 80px;
   font-family: 'Press Start 2P', monospace;
@@ -229,20 +216,23 @@ canvas {
 }
 @media (max-width: 768px) {
   #mobile-controls { display: flex; }
-  #hud { gap: 10px; font-size: 9px; }
+  #hud { gap: 15px; font-size: 9px; }
   #top-bar a { font-size: 9px; }
-  .toggle-btn { width: 30px; height: 30px; font-size: 14px; }
+  .toggle-btn { font-size: 11px; padding: 3px 6px; }
 }
 </style>
 </head>
-<body>
+<body class="dark">
 <div id="top-bar">
   <a href="../index.html">&larr; 허브로 돌아가기</a>
-  <div id="hud">
-    <span>점수: <b id="score-display">0</b></span>
-    <span>생명: <b id="lives-display">&hearts;&hearts;&hearts;</b></span>
-    <button class="toggle-btn" id="sound-toggle" title="소리 켜기/끄기">&#x1F50A;</button>
-    <button class="toggle-btn" id="theme-toggle" title="테마 변경">&#x1F319;</button>
+  <div class="top-right-controls">
+    <div id="hud">
+      <span>점수: <b id="score-display">0</b></span>
+      <span>최고: <b id="best-display">0</b></span>
+      <span>생명: <b id="lives-display">&#9829;&#9829;&#9829;</b></span>
+    </div>
+    <button class="toggle-btn" id="sound-toggle" title="사운드 토글">&#128266;</button>
+    <button class="toggle-btn" id="theme-toggle" title="테마 토글">&#9788;</button>
   </div>
 </div>
 <canvas id="gameCanvas"></canvas>
@@ -260,18 +250,18 @@ canvas {
 <div id="game-over-screen">
   <h1>게임 오버</h1>
   <div class="final-score">최종 점수: <span id="final-score">0</span></div>
-  <div class="best-score">최고 점수: <span id="best-score">0</span></div>
+  <div class="best-score">최고 기록: <span id="best-score-display">0</span></div>
   <button id="play-again-btn">다시 하기</button>
 </div>
 
 <div id="mobile-controls">
   <div class="mobile-btn-group">
-    <div class="mobile-btn" id="btn-left">&#x25C0;</div>
-    <div class="mobile-btn" id="btn-right">&#x25B6;</div>
+    <div class="mobile-btn" id="btn-left">&#9664;</div>
+    <div class="mobile-btn" id="btn-right">&#9654;</div>
   </div>
   <div class="mobile-btn-group">
-    <div class="mobile-btn" id="btn-up">&#x25B2;</div>
-    <div class="mobile-btn" id="btn-down">&#x25BC;</div>
+    <div class="mobile-btn" id="btn-up">&#9650;</div>
+    <div class="mobile-btn" id="btn-down">&#9660;</div>
   </div>
   <div class="mobile-btn fire-btn" id="btn-fire">발사</div>
 </div>
@@ -280,6 +270,114 @@ canvas {
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// ─── Theme ──────────────────────────────────────────
+let currentTheme = localStorage.getItem('arcade_theme') === 'light' ? 'light' : 'dark';
+function applyTheme(theme) {
+  currentTheme = theme;
+  document.body.className = theme;
+  localStorage.setItem('arcade_theme', theme);
+  document.getElementById('theme-toggle').textContent = theme === 'dark' ? '\u2606' : '\u2605';
+}
+applyTheme(currentTheme);
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+});
+
+// ─── Sound (Web Audio API) ──────────────────────────
+let audioCtx = null;
+let soundEnabled = localStorage.getItem('arcade_sound') !== 'off';
+
+function ensureAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function updateSoundBtn() {
+  document.getElementById('sound-toggle').textContent = soundEnabled ? '\u{1F50A}' : '\u{1F507}';
+}
+updateSoundBtn();
+
+document.getElementById('sound-toggle').addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('arcade_sound', soundEnabled ? 'on' : 'off');
+  updateSoundBtn();
+});
+
+function playSound(type) {
+  if (!soundEnabled) return;
+  try {
+    const ctx = ensureAudioCtx();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    if (type === 'shoot') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(440, now + 0.08);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.start(now);
+      osc.stop(now + 0.08);
+    } else if (type === 'destroy') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(400, now);
+      osc.frequency.exponentialRampToValueAtTime(60, now + 0.25);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc.start(now);
+      osc.stop(now + 0.25);
+      // Add noise burst
+      const noise = ctx.createOscillator();
+      const ng = ctx.createGain();
+      noise.type = 'square';
+      noise.frequency.setValueAtTime(120, now);
+      noise.frequency.setValueAtTime(80, now + 0.05);
+      noise.connect(ng);
+      ng.connect(ctx.destination);
+      ng.gain.setValueAtTime(0.1, now);
+      ng.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      noise.start(now);
+      noise.stop(now + 0.15);
+    } else if (type === 'hit') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(200, now);
+      osc.frequency.exponentialRampToValueAtTime(80, now + 0.3);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } else if (type === 'gameover') {
+      osc.type = 'square';
+      gain.gain.setValueAtTime(0.15, now);
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.setValueAtTime(330, now + 0.2);
+      osc.frequency.setValueAtTime(220, now + 0.4);
+      osc.frequency.setValueAtTime(110, now + 0.6);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+      osc.start(now);
+      osc.stop(now + 0.9);
+    }
+  } catch (e) {}
+}
+
+// ─── Best Score ─────────────────────────────────────
+let bestScore = parseInt(localStorage.getItem('shooting_best')) || 0;
+document.getElementById('best-display').textContent = bestScore;
+
+function saveBestScore() {
+  if (score > bestScore) {
+    bestScore = score;
+    localStorage.setItem('shooting_best', bestScore);
+  }
+  document.getElementById('best-display').textContent = bestScore;
+}
+
+// ─── Canvas Resize ──────────────────────────────────
 function resizeCanvas() {
   const maxW = Math.min(window.innerWidth - 20, 600);
   const maxH = Math.min(window.innerHeight - 60, 800);
@@ -289,169 +387,7 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-// ============================================================
-// SOUND SYSTEM (Web Audio API)
-// ============================================================
-let audioCtx = null;
-let soundMuted = localStorage.getItem('arcade_sound') === 'off';
-
-function ensureAudioCtx() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
-}
-
-function playSound(type) {
-  if (soundMuted) return;
-  ensureAudioCtx();
-  const now = audioCtx.currentTime;
-
-  if (type === 'shoot') {
-    // Short laser beep
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(880, now);
-    osc.frequency.exponentialRampToValueAtTime(440, now + 0.08);
-    gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(now);
-    osc.stop(now + 0.08);
-  } else if (type === 'explosion') {
-    // Enemy destroyed - noise burst
-    const bufferSize = audioCtx.sampleRate * 0.2;
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
-    }
-    const noise = audioCtx.createBufferSource();
-    noise.buffer = buffer;
-    const gain = audioCtx.createGain();
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(1200, now);
-    filter.frequency.exponentialRampToValueAtTime(200, now + 0.2);
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(audioCtx.destination);
-    noise.start(now);
-    noise.stop(now + 0.2);
-  } else if (type === 'playerHit') {
-    // Player hit - descending tone
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(600, now);
-    osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(now);
-    osc.stop(now + 0.3);
-  } else if (type === 'gameOver') {
-    // Game over - low descending sweep
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(400, now);
-    osc.frequency.exponentialRampToValueAtTime(50, now + 1.0);
-    gain.gain.setValueAtTime(0.25, now);
-    gain.gain.linearRampToValueAtTime(0.15, now + 0.5);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(now);
-    osc.stop(now + 1.0);
-
-    // Second oscillator for dissonance
-    const osc2 = audioCtx.createOscillator();
-    const gain2 = audioCtx.createGain();
-    osc2.type = 'square';
-    osc2.frequency.setValueAtTime(250, now);
-    osc2.frequency.exponentialRampToValueAtTime(30, now + 1.2);
-    gain2.gain.setValueAtTime(0.12, now);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-    osc2.connect(gain2);
-    gain2.connect(audioCtx.destination);
-    osc2.start(now);
-    osc2.stop(now + 1.2);
-  }
-}
-
-// Sound toggle
-const soundToggleBtn = document.getElementById('sound-toggle');
-function updateSoundButton() {
-  soundToggleBtn.textContent = soundMuted ? '\u{1F507}' : '\u{1F50A}';
-}
-updateSoundButton();
-
-soundToggleBtn.addEventListener('click', () => {
-  soundMuted = !soundMuted;
-  localStorage.setItem('arcade_sound', soundMuted ? 'off' : 'on');
-  updateSoundButton();
-  if (!soundMuted) {
-    ensureAudioCtx();
-  }
-});
-
-// ============================================================
-// THEME SYSTEM
-// ============================================================
-let isLightMode = localStorage.getItem('arcade_theme') === 'light';
-const themeToggleBtn = document.getElementById('theme-toggle');
-
-function applyTheme() {
-  if (isLightMode) {
-    document.body.classList.add('light-mode');
-  } else {
-    document.body.classList.remove('light-mode');
-  }
-  themeToggleBtn.textContent = isLightMode ? '\u2600\uFE0F' : '\u{1F319}';
-}
-applyTheme();
-
-themeToggleBtn.addEventListener('click', () => {
-  isLightMode = !isLightMode;
-  localStorage.setItem('arcade_theme', isLightMode ? 'light' : 'dark');
-  applyTheme();
-});
-
-function getCanvasBg() {
-  return isLightMode ? '#d0d3e8' : '#0a0a1a';
-}
-
-function getStarAlphaMult() {
-  return isLightMode ? 0.4 : 1;
-}
-
-function getTankCenter() {
-  return isLightMode ? '#d0d3e8' : '#0a0a1a';
-}
-
-// ============================================================
-// BEST SCORE
-// ============================================================
-let bestScore = parseInt(localStorage.getItem('shooting_best')) || 0;
-
-function saveBestScore() {
-  if (score > bestScore) {
-    bestScore = score;
-    localStorage.setItem('shooting_best', bestScore);
-  }
-}
-
-// ============================================================
-// GAME STATE
-// ============================================================
+// ─── Game State ─────────────────────────────────────
 let gameRunning = false;
 let score = 0;
 let lives = 3;
@@ -516,14 +452,40 @@ function updateHUD() {
   document.getElementById('lives-display').textContent = heartsStr;
 }
 
+// Get theme-aware colors
+function getBgColor() {
+  return currentTheme === 'dark' ? '#0a0a1a' : '#c5cae9';
+}
+function getPlayerColor() {
+  return currentTheme === 'dark' ? '#00ff41' : '#1b5e20';
+}
+function getPlayerGlow() {
+  return currentTheme === 'dark' ? '#00ff41' : '#2e7d32';
+}
+function getCockpitColor() {
+  return currentTheme === 'dark' ? '#88ffaa' : '#4caf50';
+}
+function getEngineColor() {
+  return currentTheme === 'dark' ? '#00aaff' : '#1565c0';
+}
+function getBulletColor() {
+  return currentTheme === 'dark' ? '#00ff41' : '#1b5e20';
+}
+function getBulletInner() {
+  return currentTheme === 'dark' ? '#aaffaa' : '#66bb6a';
+}
+function getEnemyInner() {
+  return currentTheme === 'dark' ? '#0a0a1a' : '#c5cae9';
+}
+
 // Draw player ship
 function drawPlayer() {
   ctx.save();
-  ctx.shadowColor = '#00ff41';
+  ctx.shadowColor = getPlayerGlow();
   ctx.shadowBlur = 15;
 
-  // Ship body
-  ctx.fillStyle = '#00ff41';
+  const pc = getPlayerColor();
+  ctx.fillStyle = pc;
   ctx.beginPath();
   ctx.moveTo(player.x + player.w / 2, player.y);
   ctx.lineTo(player.x + player.w, player.y + player.h);
@@ -533,8 +495,7 @@ function drawPlayer() {
   ctx.closePath();
   ctx.fill();
 
-  // Cockpit
-  ctx.fillStyle = '#88ffaa';
+  ctx.fillStyle = getCockpitColor();
   ctx.beginPath();
   ctx.moveTo(player.x + player.w / 2, player.y + 10);
   ctx.lineTo(player.x + player.w * 0.6, player.y + player.h * 0.55);
@@ -542,10 +503,10 @@ function drawPlayer() {
   ctx.closePath();
   ctx.fill();
 
-  // Engine glow
-  ctx.shadowColor = '#00aaff';
+  const ec = getEngineColor();
+  ctx.shadowColor = ec;
   ctx.shadowBlur = 20;
-  ctx.fillStyle = '#00aaff';
+  ctx.fillStyle = ec;
   const flicker = Math.random() * 6;
   ctx.fillRect(player.x + player.w * 0.35, player.y + player.h * 0.75, player.w * 0.3, 6 + flicker);
 
@@ -593,7 +554,7 @@ function drawEnemy(e) {
     ctx.beginPath();
     ctx.arc(e.x + e.w / 2, e.y + e.h / 2, e.w / 2, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = getTankCenter();
+    ctx.fillStyle = getEnemyInner();
     ctx.beginPath();
     ctx.arc(e.x + e.w / 2, e.y + e.h / 2, e.w / 4, 0, Math.PI * 2);
     ctx.fill();
@@ -671,7 +632,7 @@ function shoot() {
     w: 4,
     h: 12,
     speed: 8,
-    color: '#00ff41'
+    color: getBulletColor()
   });
   playSound('shoot');
 }
@@ -746,8 +707,8 @@ function update() {
           score += e.points;
           enemies.splice(i, 1);
           hit = true;
+          playSound('destroy');
           updateHUD();
-          playSound('explosion');
         }
         break;
       }
@@ -757,16 +718,15 @@ function update() {
     // Player-enemy collision
     if (rectsOverlap({ x: player.x + 4, y: player.y + 4, w: player.w - 8, h: player.h - 8 }, e)) {
       spawnExplosion(e.x + e.w / 2, e.y + e.h / 2, e.color, 15);
-      spawnExplosion(player.x + player.w / 2, player.y + player.h / 2, '#00ff41', 15);
+      spawnExplosion(player.x + player.w / 2, player.y + player.h / 2, getPlayerColor(), 15);
       enemies.splice(i, 1);
       lives--;
+      playSound('hit');
       updateHUD();
-      playSound('playerHit');
       if (lives <= 0) {
         gameOver();
         return;
       }
-      // Brief invincibility flash handled visually
       player.x = canvas.width / 2 - player.w / 2;
       player.y = canvas.height - player.h - 20;
     }
@@ -789,27 +749,34 @@ function update() {
 
 // Draw
 function draw() {
+  const bg = getBgColor();
+
   // Clear
-  ctx.fillStyle = getCanvasBg();
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Stars
-  const starMult = getStarAlphaMult();
+  const starMult = currentTheme === 'dark' ? 0.8 : 0.35;
   for (const s of stars) {
-    const alpha = s.brightness * 0.8 * starMult;
-    ctx.fillStyle = `rgba(${isLightMode ? '80, 80, 120' : '255, 255, 255'}, ${alpha})`;
+    const alpha = s.brightness * starMult;
+    if (currentTheme === 'dark') {
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+    } else {
+      ctx.fillStyle = `rgba(50, 50, 100, ${alpha})`;
+    }
     ctx.fillRect(s.x, s.y, s.size, s.size);
   }
 
   // Bullets
   ctx.save();
-  ctx.shadowColor = '#00ff41';
+  ctx.shadowColor = getBulletColor();
   ctx.shadowBlur = 12;
+  const bc = getBulletColor();
+  const bi = getBulletInner();
   for (const b of bullets) {
-    ctx.fillStyle = b.color;
+    ctx.fillStyle = bc;
     ctx.fillRect(b.x, b.y, b.w, b.h);
-    // Extra glow line
-    ctx.fillStyle = '#aaffaa';
+    ctx.fillStyle = bi;
     ctx.fillRect(b.x + 1, b.y, 2, b.h);
   }
   ctx.restore();
@@ -848,7 +815,6 @@ function startGame() {
   document.getElementById('game-over-screen').style.display = 'none';
   resetGame();
   gameRunning = true;
-  ensureAudioCtx();
   gameLoop();
 }
 
@@ -856,9 +822,9 @@ function gameOver() {
   gameRunning = false;
   cancelAnimationFrame(animFrame);
   saveBestScore();
-  playSound('gameOver');
+  playSound('gameover');
   document.getElementById('final-score').textContent = score;
-  document.getElementById('best-score').textContent = bestScore;
+  document.getElementById('best-score-display').textContent = bestScore;
   document.getElementById('game-over-screen').style.display = 'block';
 }
 
@@ -890,13 +856,19 @@ document.getElementById('play-again-btn').addEventListener('click', startGame);
 initStars();
 function bgDraw() {
   if (gameRunning) return;
-  ctx.fillStyle = getCanvasBg();
+  const bg = getBgColor();
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  const starMult = getStarAlphaMult();
+  const starMult = currentTheme === 'dark' ? 0.5 : 0.25;
   for (const s of stars) {
     s.y += s.speed * 0.5;
     if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; }
-    ctx.fillStyle = `rgba(${isLightMode ? '80, 80, 120' : '255,255,255'},${s.brightness * 0.5 * starMult})`;
+    const alpha = s.brightness * starMult;
+    if (currentTheme === 'dark') {
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    } else {
+      ctx.fillStyle = `rgba(50,50,100,${alpha})`;
+    }
     ctx.fillRect(s.x, s.y, s.size, s.size);
   }
   requestAnimationFrame(bgDraw);
