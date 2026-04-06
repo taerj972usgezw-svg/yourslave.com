@@ -8,28 +8,53 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  background: #0a0a1a;
+  background: var(--bg);
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
   font-family: 'Press Start 2P', monospace;
-  color: #ffff00;
+  color: var(--accent);
   overflow: hidden;
+  transition: background 0.3s, color 0.3s;
+}
+body.dark {
+  --bg: #0a0a1a;
+  --accent: #ffff00;
+  --text: #ffff00;
+  --overlay: rgba(10,10,26,0.7);
+  --ground-detail: #ffff0066;
+  --star-color: 255,255,200;
+  --eye-bg: #0a0a1a;
+  --canvas-border: #ffff0044;
+  --canvas-shadow: #ffff0033;
+  --canvas-inner: #ffff0011;
+}
+body.light {
+  --bg: #e8eaf6;
+  --accent: #b8a800;
+  --text: #333366;
+  --overlay: rgba(232,234,246,0.8);
+  --ground-detail: #b8a80066;
+  --star-color: 100,100,150;
+  --eye-bg: #e8eaf6;
+  --canvas-border: #b8a80066;
+  --canvas-shadow: #b8a80033;
+  --canvas-inner: #b8a80011;
 }
 #back-link {
   position: fixed;
   top: 16px;
   left: 16px;
-  color: #ffff00;
+  color: var(--accent);
   text-decoration: none;
   font-family: 'Press Start 2P', monospace;
   font-size: 12px;
   z-index: 100;
-  text-shadow: 0 0 8px #ffff00, 0 0 16px #ffff00;
+  text-shadow: 0 0 8px var(--accent), 0 0 16px var(--accent);
   transition: color 0.2s;
 }
-#back-link:hover { color: #ffffff; text-shadow: 0 0 12px #fff, 0 0 24px #ffff00; }
+#back-link:hover { color: #ffffff; text-shadow: 0 0 12px #fff, 0 0 24px var(--accent); }
 #game-wrapper {
   display: flex;
   flex-direction: column;
@@ -42,20 +67,51 @@ body {
 canvas {
   display: block;
   max-width: 100%;
-  border: 2px solid #ffff0044;
-  box-shadow: 0 0 20px #ffff0033, inset 0 0 20px #ffff0011;
+  border: 2px solid var(--canvas-border);
+  box-shadow: 0 0 20px var(--canvas-shadow), inset 0 0 20px var(--canvas-inner);
   border-radius: 4px;
 }
 #score-display {
   font-size: 14px;
   margin-bottom: 12px;
-  text-shadow: 0 0 8px #ffff00;
+  text-shadow: 0 0 8px var(--accent);
   letter-spacing: 2px;
+  color: var(--accent);
+}
+#controls {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 100;
+}
+#controls button {
+  background: none;
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s;
+  box-shadow: 0 0 8px var(--canvas-shadow);
+}
+#controls button:hover {
+  background: var(--canvas-shadow);
 }
 </style>
 </head>
-<body>
+<body class="dark">
 <a id="back-link" href="../index.html">← 허브로 돌아가기</a>
+<div id="controls">
+  <button id="mute-btn" title="사운드 토글">🔊</button>
+  <button id="theme-btn" title="테마 토글">🌙</button>
+</div>
 <div id="game-wrapper">
   <div id="score-display">점수: 0</div>
   <canvas id="game"></canvas>
@@ -65,7 +121,107 @@ canvas {
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const scoreDisplay = document.getElementById('score-display');
+const muteBtn = document.getElementById('mute-btn');
+const themeBtn = document.getElementById('theme-btn');
 
+// ============ Theme ============
+let isDark = localStorage.getItem('arcade_theme') !== 'light';
+function applyTheme() {
+  document.body.className = isDark ? 'dark' : 'light';
+  themeBtn.textContent = isDark ? '🌙' : '☀️';
+  localStorage.setItem('arcade_theme', isDark ? 'dark' : 'light');
+}
+applyTheme();
+themeBtn.addEventListener('click', () => {
+  isDark = !isDark;
+  applyTheme();
+});
+
+// ============ Sound (Web Audio API) ============
+let audioCtx = null;
+let soundEnabled = localStorage.getItem('arcade_sound') !== 'off';
+
+function ensureAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function updateMuteBtn() {
+  muteBtn.textContent = soundEnabled ? '🔊' : '🔇';
+}
+updateMuteBtn();
+
+muteBtn.addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('arcade_sound', soundEnabled ? 'on' : 'off');
+  updateMuteBtn();
+});
+
+function playJumpSound() {
+  if (!soundEnabled) return;
+  ensureAudioCtx();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.08);
+  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + 0.12);
+}
+
+function playScoreSound() {
+  if (!soundEnabled) return;
+  ensureAudioCtx();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+  osc.frequency.exponentialRampToValueAtTime(1600, audioCtx.currentTime + 0.2);
+  gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + 0.25);
+}
+
+function playGameOverSound() {
+  if (!soundEnabled) return;
+  ensureAudioCtx();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
+  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + 0.6);
+}
+
+// ============ Best Score ============
+let bestScore = parseInt(localStorage.getItem('runner_best')) || 0;
+
+function saveBestScore() {
+  const current = Math.floor(score);
+  if (current > bestScore) {
+    bestScore = current;
+    localStorage.setItem('runner_best', bestScore);
+  }
+}
+
+// ============ Canvas Setup ============
 const BASE_W = 800, BASE_H = 300;
 let scale = 1;
 
@@ -86,6 +242,7 @@ const JUMP_FORCE = -13.5;
 const INITIAL_SPEED = 5;
 
 let dino, obstacles, particles, stars, speed, score, gameOver, started, frameCount;
+let lastMilestone = 0;
 
 function initStars() {
   stars = [];
@@ -108,6 +265,7 @@ function reset() {
   gameOver = false;
   started = false;
   frameCount = 0;
+  lastMilestone = 0;
   initStars();
 }
 reset();
@@ -119,6 +277,7 @@ function jump() {
   if (dino.onGround) {
     dino.vy = JUMP_FORCE;
     dino.onGround = false;
+    playJumpSound();
   }
 }
 document.addEventListener('keydown', e => {
@@ -159,10 +318,18 @@ function spawnParticles(x, y, color) {
   }
 }
 
+// Theme-aware colors
+function getAccentColor() { return isDark ? '#ffff00' : '#b8a800'; }
+function getCactusColor() { return isDark ? '#00ff88' : '#2e7d32'; }
+function getBirdColor() { return isDark ? '#ff00ff' : '#9c27b0'; }
+function getEyeBg() { return isDark ? '#0a0a1a' : '#e8eaf6'; }
+function getGameOverColor() { return isDark ? '#ff0044' : '#c62828'; }
+function getRestartColor() { return isDark ? '#00ffaa' : '#2e7d32'; }
+
 // Drawing helpers
 function neonGlow(color, blur) {
   ctx.shadowColor = color;
-  ctx.shadowBlur = blur;
+  ctx.shadowBlur = isDark ? blur : blur * 0.3;
 }
 function clearGlow() {
   ctx.shadowColor = 'transparent';
@@ -171,23 +338,25 @@ function clearGlow() {
 
 function drawDino() {
   const d = dino;
-  neonGlow('#ffff00', 12);
-  ctx.fillStyle = '#ffff00';
+  const accent = getAccentColor();
+  const eyeBg = getEyeBg();
+  neonGlow(accent, 12);
+  ctx.fillStyle = accent;
 
   // Body
   ctx.fillRect(d.x + 8, d.y, 24, 30);
   // Head
   ctx.fillRect(d.x + 16, d.y - 16, 24, 20);
   // Eye
-  ctx.fillStyle = '#0a0a1a';
+  ctx.fillStyle = eyeBg;
   clearGlow();
   ctx.fillRect(d.x + 32, d.y - 12, 4, 4);
   // Mouth
-  ctx.fillStyle = '#0a0a1a';
+  ctx.fillStyle = eyeBg;
   ctx.fillRect(d.x + 28, d.y - 2, 12, 2);
 
-  neonGlow('#ffff00', 12);
-  ctx.fillStyle = '#ffff00';
+  neonGlow(accent, 12);
+  ctx.fillStyle = accent;
   // Tail
   ctx.fillRect(d.x, d.y + 6, 12, 8);
   // Arms
@@ -212,8 +381,9 @@ function drawDino() {
 }
 
 function drawCactus(o) {
-  neonGlow('#00ff88', 10);
-  ctx.fillStyle = '#00ff88';
+  const color = getCactusColor();
+  neonGlow(color, 10);
+  ctx.fillStyle = color;
   // Trunk
   ctx.fillRect(o.x + o.w / 2 - 4, o.y, 8, o.h);
   if (o.type === 'cactus') {
@@ -232,8 +402,10 @@ function drawCactus(o) {
 }
 
 function drawBird(o) {
-  neonGlow('#ff00ff', 10);
-  ctx.fillStyle = '#ff00ff';
+  const color = getBirdColor();
+  const eyeBg = getEyeBg();
+  neonGlow(color, 10);
+  ctx.fillStyle = color;
   o.frame += 0.08;
   const wingUp = Math.sin(o.frame * 4) > 0;
   // Body
@@ -248,13 +420,15 @@ function drawBird(o) {
   }
   // Eye
   clearGlow();
-  ctx.fillStyle = '#0a0a1a';
+  ctx.fillStyle = eyeBg;
   ctx.fillRect(o.x + 22, o.y + 7, 3, 3);
 }
 
 function drawGround() {
-  neonGlow('#ffff00', 8);
-  ctx.strokeStyle = '#ffff00';
+  const accent = getAccentColor();
+  const detail = isDark ? '#ffff0066' : '#b8a80066';
+  neonGlow(accent, 8);
+  ctx.strokeStyle = accent;
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(0, GROUND_Y);
@@ -262,9 +436,9 @@ function drawGround() {
   ctx.stroke();
 
   // Ground details
-  neonGlow('#ffff00', 4);
+  neonGlow(accent, 4);
   ctx.lineWidth = 1;
-  ctx.strokeStyle = '#ffff0066';
+  ctx.strokeStyle = detail;
   const offset = (frameCount * speed * 0.5) % 40;
   for (let x = -offset; x < BASE_W; x += 40) {
     ctx.beginPath();
@@ -283,9 +457,10 @@ function drawGround() {
 }
 
 function drawStars() {
+  const sc = isDark ? '255,255,200' : '100,100,150';
   stars.forEach(s => {
-    const alpha = 0.4 + 0.3 * Math.sin(s.twinkle + frameCount * 0.03);
-    ctx.fillStyle = `rgba(255,255,200,${alpha})`;
+    const alpha = (isDark ? 0.4 : 0.25) + 0.3 * Math.sin(s.twinkle + frameCount * 0.03);
+    ctx.fillStyle = `rgba(${sc},${alpha})`;
     ctx.fillRect(s.x, s.y, s.size, s.size);
   });
 }
@@ -309,22 +484,29 @@ function collides(a, b) {
 }
 
 function drawGameOver() {
-  ctx.fillStyle = 'rgba(10,10,26,0.7)';
+  const overlay = isDark ? 'rgba(10,10,26,0.7)' : 'rgba(232,234,246,0.8)';
+  ctx.fillStyle = overlay;
   ctx.fillRect(0, 0, BASE_W, BASE_H);
 
-  neonGlow('#ff0044', 20);
-  ctx.fillStyle = '#ff0044';
+  const goColor = getGameOverColor();
+  neonGlow(goColor, 20);
+  ctx.fillStyle = goColor;
   ctx.font = '24px "Press Start 2P"';
   ctx.textAlign = 'center';
-  ctx.fillText('게임 오버', BASE_W / 2, 110);
+  ctx.fillText('게임 오버', BASE_W / 2, 100);
 
-  neonGlow('#ffff00', 12);
-  ctx.fillStyle = '#ffff00';
+  const accent = getAccentColor();
+  neonGlow(accent, 12);
+  ctx.fillStyle = accent;
   ctx.font = '16px "Press Start 2P"';
-  ctx.fillText('점수: ' + Math.floor(score), BASE_W / 2, 150);
+  ctx.fillText('점수: ' + Math.floor(score), BASE_W / 2, 140);
 
-  neonGlow('#00ffaa', 10);
-  ctx.fillStyle = '#00ffaa';
+  ctx.font = '12px "Press Start 2P"';
+  ctx.fillText('최고: ' + bestScore, BASE_W / 2, 165);
+
+  const restartColor = getRestartColor();
+  neonGlow(restartColor, 10);
+  ctx.fillStyle = restartColor;
   ctx.font = '12px "Press Start 2P"';
   ctx.fillText('다시 하기: 스페이스 / 클릭', BASE_W / 2, 200);
   clearGlow();
@@ -332,17 +514,27 @@ function drawGameOver() {
 }
 
 function drawStartScreen() {
-  neonGlow('#ffff00', 14);
-  ctx.fillStyle = '#ffff00';
+  const accent = getAccentColor();
+  neonGlow(accent, 14);
+  ctx.fillStyle = accent;
   ctx.font = '18px "Press Start 2P"';
   ctx.textAlign = 'center';
   ctx.fillText('공룡 러너', BASE_W / 2, 100);
 
+  const restartColor = getRestartColor();
   ctx.font = '10px "Press Start 2P"';
-  neonGlow('#00ffaa', 8);
-  ctx.fillStyle = '#00ffaa';
+  neonGlow(restartColor, 8);
+  ctx.fillStyle = restartColor;
   ctx.fillText('스페이스 / 클릭으로 점프', BASE_W / 2, 140);
   ctx.fillText('시작하려면 누르세요!', BASE_W / 2, 165);
+
+  if (bestScore > 0) {
+    ctx.font = '10px "Press Start 2P"';
+    neonGlow(accent, 8);
+    ctx.fillStyle = accent;
+    ctx.fillText('최고 점수: ' + bestScore, BASE_W / 2, 195);
+  }
+
   clearGlow();
   ctx.textAlign = 'left';
 }
@@ -355,7 +547,14 @@ function update() {
   // Speed increases over time
   speed = INITIAL_SPEED + frameCount * 0.001;
   score += speed * 0.02;
-  scoreDisplay.textContent = '점수: ' + Math.floor(score);
+  scoreDisplay.textContent = '점수: ' + Math.floor(score) + '  최고: ' + bestScore;
+
+  // Score milestone sound
+  const currentMilestone = Math.floor(score / 100);
+  if (currentMilestone > lastMilestone) {
+    lastMilestone = currentMilestone;
+    playScoreSound();
+  }
 
   // Dino physics
   dino.vy += GRAVITY;
@@ -382,6 +581,8 @@ function update() {
   for (const o of obstacles) {
     if (collides(dinoBox, o)) {
       gameOver = true;
+      saveBestScore();
+      playGameOverSound();
       spawnParticles(dino.x + 20, dino.y + 10, 'rgb(255,255,0)');
       spawnParticles(dino.x + 20, dino.y + 10, 'rgb(255,0,68)');
       break;

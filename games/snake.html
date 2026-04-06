@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>스네이크 - YourSlave</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--accent);
+  font-family: 'Press Start 2P', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+  transition: background 0.3s, color 0.3s;
+}
+body.dark {
+  --bg: #0a0a1a;
+  --accent: #ff6600;
+  --accent-glow: #ff660088;
+  --text: #ff6600;
+  --text-dim: #ff660088;
+  --overlay-bg: rgba(10,10,26,0.88);
+  --canvas-border: #ff660033;
+  --canvas-shadow: #ff660022;
+  --canvas-bg: #0a0a1a;
+  --food-color: #ff0066;
+  --food-glow: #ff006688;
+  --grid-color: rgba(255,102,0,0.04);
+  --btn-hover-bg: #ff660022;
+  --btn-hover-shadow: #ff660088;
+  --snake-head: #ff8800;
+  --snake-body: #ff6600;
+  --snake-glow: #ff660066;
+}
+body.light {
+  --bg: #e8eaf6;
+  --accent: #ff6600;
+  --accent-glow: #ff660066;
+  --text: #1a1a2e;
+  --text-dim: #1a1a2e88;
+  --overlay-bg: rgba(232,234,246,0.92);
+  --canvas-border: #ff660044;
+  --canvas-shadow: #ff660033;
+  --canvas-bg: #dde0f0;
+  --food-color: #e60050;
+  --food-glow: #e6005066;
+  --grid-color: rgba(0,0,0,0.04);
+  --btn-hover-bg: #ff660022;
+  --btn-hover-shadow: #ff660088;
+  --snake-head: #ff8800;
+  --snake-body: #ff6600;
+  --snake-glow: #ff660044;
+}
+#top-bar {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  font-size: 11px;
+}
+#top-bar a {
+  color: var(--accent);
+  text-decoration: none;
+  text-shadow: 0 0 8px var(--accent-glow);
+  transition: color 0.2s;
+}
+#top-bar a:hover { color: #fff; text-shadow: 0 0 12px #fff; }
+.top-controls {
+  display: flex;
+  gap: 8px;
+}
+.icon-btn {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  text-shadow: 0 0 6px var(--accent-glow);
+  box-shadow: 0 0 8px var(--canvas-shadow);
+  transition: all 0.2s;
+}
+.icon-btn:hover {
+  background: var(--btn-hover-bg);
+  box-shadow: 0 0 15px var(--btn-hover-shadow);
+}
+#hud {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--text);
+  text-shadow: 0 0 6px var(--accent-glow);
+}
+#game-container {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--canvas-border);
+  box-shadow: 0 0 20px var(--canvas-shadow);
+  background: var(--canvas-bg);
+}
+#overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: var(--overlay-bg);
+  gap: 24px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+#overlay.active { opacity: 1; pointer-events: auto; }
+#overlay h2 {
+  font-size: 28px;
+  color: var(--food-color);
+  text-shadow: 0 0 20px var(--food-color), 0 0 40px var(--food-glow);
+}
+#overlay .score-display {
+  font-size: 16px;
+  color: var(--accent);
+  text-shadow: 0 0 10px var(--accent-glow);
+}
+#overlay .best-display {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-shadow: 0 0 6px var(--accent-glow);
+}
+#overlay button {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  padding: 14px 28px;
+  background: transparent;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+  cursor: pointer;
+  text-shadow: 0 0 8px var(--accent-glow);
+  box-shadow: 0 0 15px var(--canvas-shadow);
+  transition: all 0.2s;
+}
+#overlay button:hover {
+  background: var(--btn-hover-bg);
+  box-shadow: 0 0 25px var(--btn-hover-shadow);
+}
+#start-msg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 13px;
+  color: var(--accent);
+  text-shadow: 0 0 10px var(--accent-glow);
+  pointer-events: none;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+</style>
+</head>
+<body class="dark">
+<div id="top-bar">
+  <a href="../index.html">&larr; 허브로 돌아가기</a>
+  <div class="top-controls">
+    <button class="icon-btn" id="sound-btn" title="소리">&#x1f50a;</button>
+    <button class="icon-btn" id="theme-btn" title="테마">&#x263e;</button>
+  </div>
+</div>
+<div id="hud">
+  <span id="hud-score">점수: 0</span>
+  <span id="hud-best">최고: 0</span>
+</div>
+<div id="game-container">
+  <canvas id="gameCanvas" width="800" height="800"></canvas>
+  <div id="start-msg">방향키를 눌러 시작</div>
+  <div id="overlay">
+    <h2>게임 오버</h2>
+    <div class="score-display" id="overlay-score">점수: 0</div>
+    <div class="best-display" id="overlay-best">최고 점수: 0</div>
+    <button id="overlay-btn">다시 하기</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const W = 800, H = 800;
+const GRID = 20;
+const COLS = W / GRID;
+const ROWS = H / GRID;
+
+const hudScore = document.getElementById('hud-score');
+const hudBest = document.getElementById('hud-best');
+const overlay = document.getElementById('overlay');
+const overlayScore = document.getElementById('overlay-score');
+const overlayBest = document.getElementById('overlay-best');
+const overlayBtn = document.getElementById('overlay-btn');
+const startMsg = document.getElementById('start-msg');
+const soundBtn = document.getElementById('sound-btn');
+const themeBtn = document.getElementById('theme-btn');
+
+// --- Theme ---
+let currentTheme = localStorage.getItem('arcade_theme') || 'dark';
+function applyTheme(t) {
+  currentTheme = t;
+  document.body.className = t;
+  themeBtn.innerHTML = t === 'dark' ? '&#x263e;' : '&#x2600;';
+  localStorage.setItem('arcade_theme', t);
+}
+applyTheme(currentTheme);
+themeBtn.addEventListener('click', () => {
+  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+});
+
+// --- Sound ---
+let soundMuted = localStorage.getItem('arcade_sound') === 'off';
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function updateSoundBtn() {
+  soundBtn.innerHTML = soundMuted ? '&#x1f507;' : '&#x1f50a;';
+}
+updateSoundBtn();
+soundBtn.addEventListener('click', () => {
+  soundMuted = !soundMuted;
+  localStorage.setItem('arcade_sound', soundMuted ? 'off' : 'on');
+  updateSoundBtn();
+});
+
+function playEatSound() {
+  if (soundMuted) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(660, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.08);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+  } catch(e) {}
+}
+
+function playGameOverSound() {
+  if (soundMuted) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(440, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.5);
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.5);
+  } catch(e) {}
+}
+
+// --- Game State ---
+let snake, direction, nextDirection, food, score, bestScore, gameRunning, gameStarted, gameLoop, speed;
+
+bestScore = parseInt(localStorage.getItem('snake_best') || '0');
+hudBest.textContent = '최고: ' + bestScore;
+
+function initGame() {
+  const cx = Math.floor(COLS / 2);
+  const cy = Math.floor(ROWS / 2);
+  snake = [
+    { x: cx, y: cy },
+    { x: cx - 1, y: cy },
+    { x: cx - 2, y: cy }
+  ];
+  direction = { x: 1, y: 0 };
+  nextDirection = { x: 1, y: 0 };
+  score = 0;
+  speed = 120;
+  gameRunning = true;
+  gameStarted = false;
+  overlay.classList.remove('active');
+  startMsg.style.display = 'flex';
+  spawnFood();
+  updateHUD();
+  draw();
+}
+
+function spawnFood() {
+  let pos;
+  do {
+    pos = {
+      x: Math.floor(Math.random() * COLS),
+      y: Math.floor(Math.random() * ROWS)
+    };
+  } while (snake.some(s => s.x === pos.x && s.y === pos.y));
+  food = pos;
+}
+
+function updateHUD() {
+  hudScore.textContent = '점수: ' + score;
+  hudBest.textContent = '최고: ' + bestScore;
+}
+
+function getStyle(prop) {
+  return getComputedStyle(document.body).getPropertyValue(prop).trim();
+}
+
+function draw() {
+  const bg = getStyle('--canvas-bg');
+  const gridColor = getStyle('--grid-color');
+  const snakeHead = getStyle('--snake-head');
+  const snakeBody = getStyle('--snake-body');
+  const snakeGlow = getStyle('--snake-glow');
+  const foodColor = getStyle('--food-color');
+  const foodGlow = getStyle('--food-glow');
+
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = gridColor;
+  ctx.lineWidth = 0.5;
+  for (let x = 0; x <= W; x += GRID) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y <= H; y += GRID) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // Food with glow
+  ctx.save();
+  ctx.shadowColor = foodColor;
+  ctx.shadowBlur = 15;
+  ctx.fillStyle = foodColor;
+  ctx.beginPath();
+  ctx.arc(food.x * GRID + GRID / 2, food.y * GRID + GRID / 2, GRID / 2 - 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.restore();
+
+  // Snake
+  ctx.save();
+  for (let i = snake.length - 1; i >= 0; i--) {
+    const seg = snake[i];
+    const isHead = i === 0;
+    ctx.shadowColor = isHead ? snakeHead : snakeBody;
+    ctx.shadowBlur = isHead ? 18 : 10;
+    ctx.fillStyle = isHead ? snakeHead : snakeBody;
+
+    const inset = isHead ? 1 : 2;
+    const radius = isHead ? 5 : 3;
+    const x = seg.x * GRID + inset;
+    const y = seg.y * GRID + inset;
+    const w = GRID - inset * 2;
+    const h = GRID - inset * 2;
+
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + w - radius, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+    ctx.lineTo(x + w, y + h - radius);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+    ctx.lineTo(x + radius, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Eyes on head
+    if (isHead) {
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#fff';
+      let ex1, ey1, ex2, ey2;
+      const cx = seg.x * GRID + GRID / 2;
+      const cy = seg.y * GRID + GRID / 2;
+      if (direction.x === 1) { ex1 = cx + 3; ey1 = cy - 4; ex2 = cx + 3; ey2 = cy + 4; }
+      else if (direction.x === -1) { ex1 = cx - 3; ey1 = cy - 4; ex2 = cx - 3; ey2 = cy + 4; }
+      else if (direction.y === -1) { ex1 = cx - 4; ey1 = cy - 3; ex2 = cx + 4; ey2 = cy - 3; }
+      else { ex1 = cx - 4; ey1 = cy + 3; ex2 = cx + 4; ey2 = cy + 3; }
+      ctx.beginPath(); ctx.arc(ex1, ey1, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(ex2, ey2, 2, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function step() {
+  direction = { ...nextDirection };
+  const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+
+  // Wall collision
+  if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
+    gameOver();
+    return;
+  }
+
+  // Self collision
+  if (snake.some(s => s.x === head.x && s.y === head.y)) {
+    gameOver();
+    return;
+  }
+
+  snake.unshift(head);
+
+  // Eat food
+  if (head.x === food.x && head.y === food.y) {
+    score++;
+    playEatSound();
+    if (score > bestScore) {
+      bestScore = score;
+      localStorage.setItem('snake_best', bestScore.toString());
+    }
+    updateHUD();
+    spawnFood();
+    // Increase speed
+    speed = Math.max(50, 120 - score * 3);
+    clearInterval(gameLoop);
+    gameLoop = setInterval(step, speed);
+  } else {
+    snake.pop();
+  }
+
+  draw();
+}
+
+function gameOver() {
+  gameRunning = false;
+  clearInterval(gameLoop);
+  playGameOverSound();
+  draw();
+  overlayScore.textContent = '점수: ' + score;
+  overlayBest.textContent = '최고 점수: ' + bestScore;
+  overlay.classList.add('active');
+}
+
+function startGame() {
+  if (gameStarted) return;
+  gameStarted = true;
+  startMsg.style.display = 'none';
+  gameLoop = setInterval(step, speed);
+}
+
+// --- Input ---
+document.addEventListener('keydown', (e) => {
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+    e.preventDefault();
+  }
+
+  if (!gameRunning) return;
+
+  switch (e.key) {
+    case 'ArrowUp':
+      if (direction.y !== 1) { nextDirection = { x: 0, y: -1 }; startGame(); }
+      break;
+    case 'ArrowDown':
+      if (direction.y !== -1) { nextDirection = { x: 0, y: 1 }; startGame(); }
+      break;
+    case 'ArrowLeft':
+      if (direction.x !== 1) { nextDirection = { x: -1, y: 0 }; startGame(); }
+      break;
+    case 'ArrowRight':
+      if (direction.x !== -1) { nextDirection = { x: 1, y: 0 }; startGame(); }
+      break;
+  }
+});
+
+// --- Touch controls ---
+let touchStartX = 0, touchStartY = 0;
+canvas.addEventListener('touchstart', (e) => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+canvas.addEventListener('touchend', (e) => {
+  if (!gameRunning) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    if (dx > 0 && direction.x !== -1) { nextDirection = { x: 1, y: 0 }; startGame(); }
+    else if (dx < 0 && direction.x !== 1) { nextDirection = { x: -1, y: 0 }; startGame(); }
+  } else {
+    if (dy > 0 && direction.y !== -1) { nextDirection = { x: 0, y: 1 }; startGame(); }
+    else if (dy < 0 && direction.y !== 1) { nextDirection = { x: 0, y: -1 }; startGame(); }
+  }
+});
+
+overlayBtn.addEventListener('click', () => {
+  initGame();
+});
+
+initGame();
+</script>
+</body>
+</html>

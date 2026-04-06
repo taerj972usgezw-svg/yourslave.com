@@ -16,6 +16,51 @@ body {
   align-items: center;
   min-height: 100vh;
   overflow: hidden;
+  transition: background 0.3s, color 0.3s;
+}
+body.light-mode {
+  background: #e8eaf6;
+  color: #1a237e;
+}
+body.light-mode #top-bar a {
+  color: #1a237e;
+  text-shadow: none;
+}
+body.light-mode #top-bar a:hover {
+  color: #000;
+  text-shadow: none;
+}
+body.light-mode #hud {
+  color: #1a237e;
+  text-shadow: none;
+}
+body.light-mode canvas {
+  border-color: #1a237e33;
+  box-shadow: 0 0 20px #1a237e22;
+  background: #e8eaf6;
+}
+body.light-mode #overlay {
+  background: rgba(232,234,246,0.9);
+}
+body.light-mode #overlay h2 {
+  text-shadow: none;
+}
+body.light-mode #overlay .score-display {
+  color: #1a237e;
+  text-shadow: none;
+}
+body.light-mode #overlay button {
+  color: #1a237e;
+  border-color: #1a237e;
+  text-shadow: none;
+  box-shadow: 0 0 10px #1a237e22;
+}
+body.light-mode #overlay button:hover {
+  background: #1a237e22;
+}
+body.light-mode #start-msg {
+  color: #1a237e;
+  text-shadow: none;
 }
 #top-bar {
   width: 100%;
@@ -33,6 +78,30 @@ body {
   transition: color 0.2s;
 }
 #top-bar a:hover { color: #fff; text-shadow: 0 0 12px #fff; }
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.toggle-btn {
+  background: none;
+  border: 1px solid #00ffff44;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  transition: border-color 0.2s;
+}
+.toggle-btn:hover {
+  border-color: #00ffffaa;
+}
+body.light-mode .toggle-btn {
+  border-color: #1a237e44;
+}
+body.light-mode .toggle-btn:hover {
+  border-color: #1a237eaa;
+}
 #hud {
   width: 100%;
   max-width: 800px;
@@ -54,6 +123,7 @@ canvas {
   border: 1px solid #00ffff33;
   box-shadow: 0 0 20px #00ffff22;
   background: #0a0a1a;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
 }
 #overlay {
   position: absolute;
@@ -78,6 +148,15 @@ canvas {
   font-size: 16px;
   color: #00ffff;
   text-shadow: 0 0 10px #00ffff;
+}
+#overlay .best-display {
+  font-size: 11px;
+  color: #ffcc00;
+  text-shadow: 0 0 8px #ffcc00;
+}
+body.light-mode #overlay .best-display {
+  color: #e65100;
+  text-shadow: none;
 }
 #overlay button {
   font-family: 'Press Start 2P', monospace;
@@ -113,10 +192,15 @@ canvas {
 <body>
 <div id="top-bar">
   <a href="../index.html">&larr; 허브로 돌아가기</a>
-  <span>브레이크아웃</span>
+  <div class="top-bar-right">
+    <span>브레이크아웃</span>
+    <button class="toggle-btn" id="sound-toggle" title="Sound">🔊</button>
+    <button class="toggle-btn" id="theme-toggle" title="Theme">🌙</button>
+  </div>
 </div>
 <div id="hud">
   <span id="hud-score">점수: 0</span>
+  <span id="hud-best">최고: 0</span>
   <span id="hud-lives">생명: &#9829; &#9829; &#9829;</span>
 </div>
 <div id="game-container">
@@ -125,6 +209,7 @@ canvas {
   <div id="overlay">
     <h2 id="overlay-title">게임 오버</h2>
     <div class="score-display" id="overlay-score">점수: 0</div>
+    <div class="best-display" id="overlay-best"></div>
     <button id="overlay-btn">다시 하기</button>
   </div>
 </div>
@@ -138,11 +223,137 @@ canvas.height = H;
 
 const hudScore = document.getElementById('hud-score');
 const hudLives = document.getElementById('hud-lives');
+const hudBest = document.getElementById('hud-best');
 const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
+const overlayBest = document.getElementById('overlay-best');
 const overlayBtn = document.getElementById('overlay-btn');
 const startMsg = document.getElementById('start-msg');
+const soundToggle = document.getElementById('sound-toggle');
+const themeToggle = document.getElementById('theme-toggle');
+
+// ===== Sound System (Web Audio API) =====
+let audioCtx = null;
+let soundEnabled = localStorage.getItem('arcade_sound') !== 'off';
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return audioCtx;
+}
+
+function playTone(freq, duration, type, volume) {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || 'square';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(volume || 0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  } catch (e) {}
+}
+
+function playBrickSound() {
+  playTone(660, 0.08, 'square', 0.07);
+}
+
+function playPaddleSound() {
+  playTone(330, 0.1, 'triangle', 0.06);
+}
+
+function playGameOverSound() {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    [200, 160, 120].forEach((f, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(f, now + i * 0.15);
+      gain.gain.setValueAtTime(0.08, now + i * 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.15 + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + i * 0.15);
+      osc.stop(now + i * 0.15 + 0.3);
+    });
+  } catch (e) {}
+}
+
+function playVictorySound() {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    [523, 659, 784, 1047].forEach((f, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(f, now + i * 0.12);
+      gain.gain.setValueAtTime(0.08, now + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.25);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + i * 0.12);
+      osc.stop(now + i * 0.12 + 0.25);
+    });
+  } catch (e) {}
+}
+
+// Sound toggle
+function updateSoundButton() {
+  soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
+}
+updateSoundButton();
+
+soundToggle.addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('arcade_sound', soundEnabled ? 'on' : 'off');
+  updateSoundButton();
+});
+
+// ===== Theme System =====
+let lightMode = localStorage.getItem('arcade_theme') === 'light';
+
+function applyTheme() {
+  if (lightMode) {
+    document.body.classList.add('light-mode');
+    themeToggle.textContent = '☀️';
+  } else {
+    document.body.classList.remove('light-mode');
+    themeToggle.textContent = '🌙';
+  }
+}
+applyTheme();
+
+themeToggle.addEventListener('click', () => {
+  lightMode = !lightMode;
+  localStorage.setItem('arcade_theme', lightMode ? 'light' : 'dark');
+  applyTheme();
+});
+
+// ===== Best Score =====
+let bestScore = parseInt(localStorage.getItem('breakout_best')) || 0;
+
+function updateBestScore() {
+  if (score > bestScore) {
+    bestScore = score;
+    localStorage.setItem('breakout_best', bestScore);
+  }
+}
+
+function displayBest() {
+  hudBest.textContent = `최고: ${bestScore}`;
+}
 
 // Neon brick colors
 const BRICK_COLORS = [
@@ -167,6 +378,7 @@ function initGame() {
   initPaddle();
   initBall();
   updateHUD();
+  displayBest();
 }
 
 function initPaddle() {
@@ -222,6 +434,7 @@ function updateHUD() {
   let hearts = '';
   for (let i = 0; i < 3; i++) hearts += i < lives ? ' \u2665' : ' \u2661';
   hudLives.textContent = `생명:${hearts}`;
+  displayBest();
 }
 
 // Mouse / Touch
@@ -351,6 +564,7 @@ function update() {
     ball.dy = -speed * Math.cos(angle);
     ball.y = py - ball.r;
     spawnParticles(ball.x, ball.y, '#00ffff', 5);
+    playPaddleSound();
   }
 
   // Brick collision
@@ -363,6 +577,7 @@ function update() {
       score += b.points;
       updateHUD();
       spawnParticles(b.x + b.w / 2, b.y + b.h / 2, b.color, 12);
+      playBrickSound();
 
       // Determine which side was hit
       const overlapLeft = (ball.x + ball.r) - b.x;
@@ -397,15 +612,35 @@ function gameOver(won) {
     ? '0 0 20px #00ff99, 0 0 40px #00ff9988'
     : '0 0 20px #ff0066, 0 0 40px #ff006688';
   overlayScore.textContent = `최종 점수: ${score}`;
+
+  // Update best score
+  updateBestScore();
+  if (score >= bestScore) {
+    overlayBest.textContent = `새로운 최고 기록!`;
+  } else {
+    overlayBest.textContent = `최고 기록: ${bestScore}`;
+  }
+
   overlay.classList.add('active');
+
+  // Play end sound
+  if (won) {
+    playVictorySound();
+  } else {
+    playGameOverSound();
+  }
 }
 
 // Draw
 function draw() {
-  ctx.clearRect(0, 0, W, H);
+  const isLight = lightMode;
+  const bgColor = isLight ? '#e8eaf6' : '#0a0a1a';
+
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, W, H);
 
   // Draw subtle grid
-  ctx.strokeStyle = '#ffffff08';
+  ctx.strokeStyle = isLight ? '#00000008' : '#ffffff08';
   ctx.lineWidth = 1;
   for (let x = 0; x < W; x += 40) {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
@@ -418,7 +653,7 @@ function draw() {
   for (const b of bricks) {
     if (!b.alive) continue;
     ctx.shadowColor = b.color;
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = isLight ? 4 : 12;
     ctx.fillStyle = b.color;
     ctx.beginPath();
     roundRect(ctx, b.x, b.y, b.w, b.h, 3);
@@ -432,9 +667,10 @@ function draw() {
   ctx.shadowBlur = 0;
 
   // Draw paddle
-  ctx.shadowColor = '#00ffff';
-  ctx.shadowBlur = 16;
-  ctx.fillStyle = '#00ffff';
+  const paddleColor = isLight ? '#1a237e' : '#00ffff';
+  ctx.shadowColor = paddleColor;
+  ctx.shadowBlur = isLight ? 4 : 16;
+  ctx.fillStyle = paddleColor;
   const px = paddle.x - paddle.w / 2;
   const py = paddle.y - paddle.h / 2;
   ctx.beginPath();
@@ -452,12 +688,13 @@ function draw() {
   ctx.fill();
 
   // Draw ball trail
+  const trailColor = isLight ? '#1a237e' : '#00ffff';
   for (let i = 0; i < ball.trail.length; i++) {
     const t = ball.trail[i];
     const alpha = (i / ball.trail.length) * 0.4;
     const size = ball.r * (i / ball.trail.length);
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = '#00ffff';
+    ctx.fillStyle = trailColor;
     ctx.beginPath();
     ctx.arc(t.x, t.y, size, 0, Math.PI * 2);
     ctx.fill();
@@ -465,15 +702,17 @@ function draw() {
   ctx.globalAlpha = 1;
 
   // Draw ball
-  ctx.shadowColor = '#ffffff';
-  ctx.shadowBlur = 20;
-  ctx.fillStyle = '#ffffff';
+  const ballColor = isLight ? '#1a237e' : '#ffffff';
+  const ballGlow = isLight ? '#3949ab' : '#00ffff';
+  ctx.shadowColor = ballColor;
+  ctx.shadowBlur = isLight ? 6 : 20;
+  ctx.fillStyle = ballColor;
   ctx.beginPath();
   ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.shadowColor = '#00ffff';
-  ctx.shadowBlur = 30;
+  ctx.shadowColor = ballGlow;
+  ctx.shadowBlur = isLight ? 8 : 30;
   ctx.beginPath();
   ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
   ctx.fill();
