@@ -8,13 +8,44 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  background: #0a0a1a;
+  background: var(--bg-color, #0a0a1a);
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
   font-family: 'Press Start 2P', cursive;
   overflow: hidden;
+  transition: background 0.3s;
+}
+body.light-mode {
+  --bg-color: #e8eaf6;
+  --text-color: #880088;
+  --text-glow: rgba(136,0,136,0.6);
+  --overlay-bg: rgba(232,234,246,0.94);
+  --star-color: rgba(100,100,140,0.4);
+  --pipe-fill1: #c8b0d8;
+  --pipe-fill2: #d8c0e8;
+  --hud-color: #880088;
+  --hint-color: #666;
+  --best-color: #555;
+  --score-overlay: #333;
+  --canvas-bg: #e8eaf6;
+  --eye-bg: #0a0a1a;
+}
+body:not(.light-mode) {
+  --bg-color: #0a0a1a;
+  --text-color: #ff00ff;
+  --text-glow: #ff00ff;
+  --overlay-bg: rgba(10,10,26,0.92);
+  --star-color: rgba(255,255,255,0.5);
+  --pipe-fill1: #1a0033;
+  --pipe-fill2: #2a0050;
+  --hud-color: #ff00ff;
+  --hint-color: #888;
+  --best-color: #aaa;
+  --score-overlay: #fff;
+  --canvas-bg: #0a0a1a;
+  --eye-bg: #0a0a1a;
 }
 #top-bar {
   width: 100%;
@@ -26,20 +57,37 @@ body {
   z-index: 10;
 }
 #top-bar a {
-  color: #ff00ff;
+  color: var(--text-color);
   text-decoration: none;
   font-family: 'Press Start 2P', cursive;
   font-size: 10px;
-  text-shadow: 0 0 8px #ff00ff, 0 0 16px #ff00ff;
+  text-shadow: 0 0 8px var(--text-glow), 0 0 16px var(--text-glow);
   transition: text-shadow 0.2s;
 }
 #top-bar a:hover {
-  text-shadow: 0 0 12px #ff00ff, 0 0 24px #ff00ff, 0 0 36px #ff00ff;
+  text-shadow: 0 0 12px var(--text-glow), 0 0 24px var(--text-glow), 0 0 36px var(--text-glow);
+}
+#top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 #score-display {
-  color: #ff00ff;
+  color: var(--hud-color);
   font-size: 10px;
-  text-shadow: 0 0 8px #ff00ff, 0 0 16px #ff00ff;
+  text-shadow: 0 0 8px var(--text-glow), 0 0 16px var(--text-glow);
+}
+.toggle-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  transition: transform 0.2s;
+}
+.toggle-btn:hover {
+  transform: scale(1.2);
 }
 #game-wrapper {
   position: relative;
@@ -73,24 +121,24 @@ canvas {
   align-items: center;
   gap: 20px;
   padding: 30px;
-  background: rgba(10,10,26,0.92);
+  background: var(--overlay-bg);
   border: 2px solid #ff00ff;
   border-radius: 8px;
   box-shadow: 0 0 20px #ff00ff, 0 0 40px rgba(255,0,255,0.3);
 }
 #overlay.active #overlay-content { display: flex; }
 #overlay-title {
-  color: #ff00ff;
+  color: var(--text-color);
   font-size: 18px;
-  text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
+  text-shadow: 0 0 10px var(--text-glow), 0 0 20px var(--text-glow);
 }
 #overlay-score {
-  color: #fff;
+  color: var(--score-overlay);
   font-size: 12px;
   text-shadow: 0 0 6px rgba(255,255,255,0.5);
 }
 #overlay-best {
-  color: #aaa;
+  color: var(--best-color);
   font-size: 10px;
 }
 #play-btn {
@@ -110,7 +158,7 @@ canvas {
   box-shadow: 0 0 15px #ff00ff, 0 0 30px rgba(255,0,255,0.5);
 }
 #start-hint {
-  color: #888;
+  color: var(--hint-color);
   font-size: 9px;
   text-align: center;
   line-height: 1.6;
@@ -120,7 +168,11 @@ canvas {
 <body>
 <div id="top-bar">
   <a href="../index.html">&larr; 허브로 돌아가기</a>
-  <div id="score-display">점수: <span id="hud-score">0</span></div>
+  <div id="top-bar-right">
+    <div id="score-display">점수: <span id="hud-score">0</span></div>
+    <button class="toggle-btn" id="sound-toggle" title="사운드 토글">🔊</button>
+    <button class="toggle-btn" id="theme-toggle" title="테마 토글">🌙</button>
+  </div>
 </div>
 <div id="game-wrapper">
   <canvas id="game"></canvas>
@@ -145,6 +197,110 @@ const overlayBest = document.getElementById('overlay-best');
 const playBtn = document.getElementById('play-btn');
 const startHint = document.getElementById('start-hint');
 const hudScore = document.getElementById('hud-score');
+const soundToggleBtn = document.getElementById('sound-toggle');
+const themeToggleBtn = document.getElementById('theme-toggle');
+
+// ── Theme ──
+let isLightMode = localStorage.getItem('arcade_theme') === 'light';
+
+function applyTheme() {
+  document.body.classList.toggle('light-mode', isLightMode);
+  themeToggleBtn.textContent = isLightMode ? '☀️' : '🌙';
+}
+applyTheme();
+
+themeToggleBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  isLightMode = !isLightMode;
+  localStorage.setItem('arcade_theme', isLightMode ? 'light' : 'dark');
+  applyTheme();
+});
+
+// Helper to read current CSS variable
+function cssVar(name) {
+  return getComputedStyle(document.body).getPropertyValue(name).trim();
+}
+
+// ── Sound (Web Audio API) ──
+let audioCtx = null;
+let soundEnabled = localStorage.getItem('arcade_sound') !== 'off';
+
+function ensureAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function playTone(freq, duration, type, volumeEnd) {
+  if (!soundEnabled) return;
+  ensureAudioCtx();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type || 'square';
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  if (typeof volumeEnd === 'number') {
+    osc.frequency.linearRampToValueAtTime(volumeEnd, audioCtx.currentTime + duration);
+  }
+  gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + duration);
+}
+
+function playFlapSound() {
+  playTone(580, 0.08, 'square');
+}
+
+function playScoreSound() {
+  if (!soundEnabled) return;
+  ensureAudioCtx();
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(520, now);
+  osc.frequency.linearRampToValueAtTime(780, now + 0.12);
+  gain.gain.setValueAtTime(0.1, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.18);
+}
+
+function playDieSound() {
+  if (!soundEnabled) return;
+  ensureAudioCtx();
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(440, now);
+  osc.frequency.linearRampToValueAtTime(120, now + 0.35);
+  gain.gain.setValueAtTime(0.15, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.4);
+}
+
+function updateSoundBtn() {
+  soundToggleBtn.textContent = soundEnabled ? '🔊' : '🔇';
+}
+updateSoundBtn();
+
+soundToggleBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('arcade_sound', soundEnabled ? 'on' : 'off');
+  updateSoundBtn();
+});
 
 // Canvas sizing
 function resize() {
@@ -207,8 +363,10 @@ function jump() {
     overlay.classList.remove('active');
     bird.vy = JUMP_VEL;
     lastPipeTime = performance.now();
+    playFlapSound();
   } else if (gameState === 'playing') {
     bird.vy = JUMP_VEL;
+    playFlapSound();
   }
 }
 
@@ -266,6 +424,7 @@ function update(now) {
       pipes[i].scored = true;
       score++;
       hudScore.textContent = score;
+      playScoreSound();
     }
     // Remove off-screen
     if (pipes[i].x + PIPE_WIDTH < -10) {
@@ -293,6 +452,7 @@ function update(now) {
 
 function die() {
   gameState = 'dead';
+  playDieSound();
   if (score > bestScore) {
     bestScore = score;
     localStorage.setItem('flappy_best', bestScore);
@@ -307,16 +467,18 @@ function die() {
 
 // Drawing
 function drawBg() {
-  ctx.fillStyle = '#0a0a1a';
+  const bgColor = cssVar('--canvas-bg') || '#0a0a1a';
+  ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Stars
+  const starColor = isLightMode ? 'rgba(100,100,140,' : 'rgba(255,255,255,';
   for (const s of stars) {
     s.x -= s.speed;
     if (s.x < 0) { s.x = canvas.width; s.y = Math.random() * canvas.height; }
     ctx.beginPath();
     ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+    ctx.fillStyle = starColor + s.a + ')';
     ctx.fill();
   }
 
@@ -339,10 +501,13 @@ function drawBg() {
 }
 
 function drawPipe(p) {
+  const fill1 = cssVar('--pipe-fill1') || '#1a0033';
+  const fill2 = cssVar('--pipe-fill2') || '#2a0050';
+
   const grad = ctx.createLinearGradient(p.x, 0, p.x + PIPE_WIDTH, 0);
-  grad.addColorStop(0, '#1a0033');
-  grad.addColorStop(0.5, '#2a0050');
-  grad.addColorStop(1, '#1a0033');
+  grad.addColorStop(0, fill1);
+  grad.addColorStop(0.5, fill2);
+  grad.addColorStop(1, fill1);
 
   // Top pipe
   ctx.fillStyle = grad;
@@ -359,14 +524,14 @@ function drawPipe(p) {
   // Top pipe border
   ctx.strokeRect(p.x, 0, PIPE_WIDTH, p.topH);
   // Top pipe cap
-  ctx.fillStyle = '#2a0050';
+  ctx.fillStyle = fill2;
   ctx.fillRect(p.x - 4, p.topH - 16, PIPE_WIDTH + 8, 16);
   ctx.strokeRect(p.x - 4, p.topH - 16, PIPE_WIDTH + 8, 16);
 
   // Bottom pipe border
   ctx.strokeRect(p.x, p.topH + PIPE_GAP, PIPE_WIDTH, canvas.height - p.topH - PIPE_GAP);
   // Bottom pipe cap
-  ctx.fillStyle = '#2a0050';
+  ctx.fillStyle = fill2;
   ctx.fillRect(p.x - 4, p.topH + PIPE_GAP, PIPE_WIDTH + 8, 16);
   ctx.strokeRect(p.x - 4, p.topH + PIPE_GAP, PIPE_WIDTH + 8, 16);
 
@@ -400,7 +565,8 @@ function drawBird() {
   ctx.beginPath();
   ctx.arc(6, -4, 4, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = '#0a0a1a';
+  const eyeBg = isLightMode ? '#333' : '#0a0a1a';
+  ctx.fillStyle = eyeBg;
   ctx.beginPath();
   ctx.arc(7, -4, 2, 0, Math.PI * 2);
   ctx.fill();

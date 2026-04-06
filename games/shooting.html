@@ -8,15 +8,55 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  background: #0a0a1a;
-  color: #00ff41;
+  background: var(--bg);
+  color: var(--accent);
   font-family: 'Press Start 2P', monospace;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   height: 100vh;
+  transition: background 0.3s, color 0.3s;
 }
+
+/* Theme variables */
+:root {
+  --bg: #0a0a1a;
+  --bg-translucent: #0a0a1aee;
+  --accent: #00ff41;
+  --accent-hover: #33ff66;
+  --accent-dim: #00ff41aa;
+  --accent-glow22: #00ff4122;
+  --accent-glow33: #00ff4133;
+  --accent-glow55: #00ff4155;
+  --accent-glow88: #00ff4188;
+  --accent-glowcc: #00ff41cc;
+  --accent-glow08: #00ff4108;
+  --canvas-bg: #0a0a1a;
+  --text-btn: #0a0a1a;
+  --star-alpha-mult: 1;
+  --border-color: #00ff4133;
+  --hud-color: #00ff41;
+}
+body.light-mode {
+  --bg: #e8eaf6;
+  --bg-translucent: #e8eaf6ee;
+  --accent: #007a1f;
+  --accent-hover: #009a2f;
+  --accent-dim: #007a1faa;
+  --accent-glow22: #007a1f22;
+  --accent-glow33: #007a1f33;
+  --accent-glow55: #007a1f55;
+  --accent-glow88: #007a1f88;
+  --accent-glowcc: #007a1fcc;
+  --accent-glow08: #007a1f08;
+  --canvas-bg: #d0d3e8;
+  --text-btn: #e8eaf6;
+  --star-alpha-mult: 0.4;
+  --border-color: #007a1f44;
+  --hud-color: #007a1f;
+}
+
 #top-bar {
   width: 100%;
   padding: 10px 20px;
@@ -26,25 +66,45 @@ body {
   z-index: 10;
 }
 #top-bar a {
-  color: #00ff41;
+  color: var(--accent);
   text-decoration: none;
   font-family: 'Press Start 2P', monospace;
   font-size: 11px;
   transition: text-shadow 0.2s;
 }
 #top-bar a:hover {
-  text-shadow: 0 0 10px #00ff41, 0 0 20px #00ff41;
+  text-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent);
 }
 #hud {
   display: flex;
   gap: 30px;
   font-size: 11px;
+  align-items: center;
+  color: var(--hud-color);
 }
 #hud span { white-space: nowrap; }
+.toggle-btn {
+  background: none;
+  border: 1px solid var(--accent-glow55);
+  color: var(--accent);
+  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.toggle-btn:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow55);
+}
 canvas {
   display: block;
-  border: 1px solid #00ff4133;
-  box-shadow: 0 0 20px #00ff4122, inset 0 0 20px #00ff4108;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 0 20px var(--accent-glow22), inset 0 0 20px var(--accent-glow08);
 }
 #game-over-screen {
   display: none;
@@ -53,10 +113,10 @@ canvas {
   transform: translate(-50%, -50%);
   text-align: center;
   z-index: 20;
-  background: #0a0a1aee;
+  background: var(--bg-translucent);
   padding: 40px 50px;
-  border: 2px solid #00ff41;
-  box-shadow: 0 0 30px #00ff4155, inset 0 0 30px #00ff4122;
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 30px var(--accent-glow55), inset 0 0 30px var(--accent-glow22);
   border-radius: 4px;
 }
 #game-over-screen h1 {
@@ -68,24 +128,29 @@ canvas {
 }
 #game-over-screen .final-score {
   font-size: 16px;
+  margin-bottom: 10px;
+  color: var(--accent);
+  text-shadow: 0 0 10px var(--accent);
+}
+#game-over-screen .best-score {
+  font-size: 11px;
   margin-bottom: 30px;
-  color: #00ff41;
-  text-shadow: 0 0 10px #00ff41;
+  color: var(--accent-dim);
 }
 #play-again-btn {
   font-family: 'Press Start 2P', monospace;
   font-size: 14px;
-  color: #0a0a1a;
-  background: #00ff41;
+  color: var(--text-btn);
+  background: var(--accent);
   border: none;
   padding: 15px 30px;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 0 15px #00ff4188;
+  box-shadow: 0 0 15px var(--accent-glow88);
 }
 #play-again-btn:hover {
-  background: #33ff66;
-  box-shadow: 0 0 30px #00ff41cc;
+  background: var(--accent-hover);
+  box-shadow: 0 0 30px var(--accent-glowcc);
   transform: scale(1.05);
 }
 #start-screen {
@@ -94,39 +159,39 @@ canvas {
   transform: translate(-50%, -50%);
   text-align: center;
   z-index: 20;
-  background: #0a0a1aee;
+  background: var(--bg-translucent);
   padding: 40px 50px;
-  border: 2px solid #00ff41;
-  box-shadow: 0 0 30px #00ff4155;
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 30px var(--accent-glow55);
   border-radius: 4px;
 }
 #start-screen h1 {
   font-family: 'Press Start 2P', monospace;
-  color: #00ff41;
+  color: var(--accent);
   font-size: 22px;
-  text-shadow: 0 0 20px #00ff41;
+  text-shadow: 0 0 20px var(--accent);
   margin-bottom: 20px;
 }
 #start-screen p {
   font-size: 10px;
   line-height: 2;
   margin-bottom: 25px;
-  color: #00ff41aa;
+  color: var(--accent-dim);
 }
 #start-btn {
   font-family: 'Press Start 2P', monospace;
   font-size: 14px;
-  color: #0a0a1a;
-  background: #00ff41;
+  color: var(--text-btn);
+  background: var(--accent);
   border: none;
   padding: 15px 30px;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 0 15px #00ff4188;
+  box-shadow: 0 0 15px var(--accent-glow88);
 }
 #start-btn:hover {
-  background: #33ff66;
-  box-shadow: 0 0 30px #00ff41cc;
+  background: var(--accent-hover);
+  box-shadow: 0 0 30px var(--accent-glowcc);
   transform: scale(1.05);
 }
 #mobile-controls {
@@ -144,10 +209,10 @@ canvas {
 }
 .mobile-btn {
   width: 56px; height: 56px;
-  background: #00ff4122;
-  border: 2px solid #00ff4166;
+  background: var(--accent-glow22);
+  border: 2px solid var(--accent-glow55);
   border-radius: 8px;
-  color: #00ff41;
+  color: var(--accent);
   font-size: 22px;
   display: flex;
   align-items: center;
@@ -156,7 +221,7 @@ canvas {
   -webkit-user-select: none;
   touch-action: manipulation;
 }
-.mobile-btn:active { background: #00ff4155; }
+.mobile-btn:active { background: var(--accent-glow55); }
 .mobile-btn.fire-btn {
   width: 80px;
   font-family: 'Press Start 2P', monospace;
@@ -164,17 +229,20 @@ canvas {
 }
 @media (max-width: 768px) {
   #mobile-controls { display: flex; }
-  #hud { gap: 15px; font-size: 9px; }
+  #hud { gap: 10px; font-size: 9px; }
   #top-bar a { font-size: 9px; }
+  .toggle-btn { width: 30px; height: 30px; font-size: 14px; }
 }
 </style>
 </head>
 <body>
 <div id="top-bar">
-  <a href="../index.html">← 허브로 돌아가기</a>
+  <a href="../index.html">&larr; 허브로 돌아가기</a>
   <div id="hud">
     <span>점수: <b id="score-display">0</b></span>
-    <span>생명: <b id="lives-display">♥♥♥</b></span>
+    <span>생명: <b id="lives-display">&hearts;&hearts;&hearts;</b></span>
+    <button class="toggle-btn" id="sound-toggle" title="소리 켜기/끄기">&#x1F50A;</button>
+    <button class="toggle-btn" id="theme-toggle" title="테마 변경">&#x1F319;</button>
   </div>
 </div>
 <canvas id="gameCanvas"></canvas>
@@ -182,7 +250,7 @@ canvas {
 <div id="start-screen">
   <h1>우주 슈팅</h1>
   <p>
-    ← → : 이동<br>
+    &larr; &rarr; : 이동<br>
     스페이스바 : 발사<br>
     적을 파괴하고 점수를 올리세요!
   </p>
@@ -192,17 +260,18 @@ canvas {
 <div id="game-over-screen">
   <h1>게임 오버</h1>
   <div class="final-score">최종 점수: <span id="final-score">0</span></div>
+  <div class="best-score">최고 점수: <span id="best-score">0</span></div>
   <button id="play-again-btn">다시 하기</button>
 </div>
 
 <div id="mobile-controls">
   <div class="mobile-btn-group">
-    <div class="mobile-btn" id="btn-left">◀</div>
-    <div class="mobile-btn" id="btn-right">▶</div>
+    <div class="mobile-btn" id="btn-left">&#x25C0;</div>
+    <div class="mobile-btn" id="btn-right">&#x25B6;</div>
   </div>
   <div class="mobile-btn-group">
-    <div class="mobile-btn" id="btn-up">▲</div>
-    <div class="mobile-btn" id="btn-down">▼</div>
+    <div class="mobile-btn" id="btn-up">&#x25B2;</div>
+    <div class="mobile-btn" id="btn-down">&#x25BC;</div>
   </div>
   <div class="mobile-btn fire-btn" id="btn-fire">발사</div>
 </div>
@@ -220,7 +289,169 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-// Game state
+// ============================================================
+// SOUND SYSTEM (Web Audio API)
+// ============================================================
+let audioCtx = null;
+let soundMuted = localStorage.getItem('arcade_sound') === 'off';
+
+function ensureAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function playSound(type) {
+  if (soundMuted) return;
+  ensureAudioCtx();
+  const now = audioCtx.currentTime;
+
+  if (type === 'shoot') {
+    // Short laser beep
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(880, now);
+    osc.frequency.exponentialRampToValueAtTime(440, now + 0.08);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.08);
+  } else if (type === 'explosion') {
+    // Enemy destroyed - noise burst
+    const bufferSize = audioCtx.sampleRate * 0.2;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1200, now);
+    filter.frequency.exponentialRampToValueAtTime(200, now + 0.2);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    noise.start(now);
+    noise.stop(now + 0.2);
+  } else if (type === 'playerHit') {
+    // Player hit - descending tone
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(600, now);
+    osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  } else if (type === 'gameOver') {
+    // Game over - low descending sweep
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(400, now);
+    osc.frequency.exponentialRampToValueAtTime(50, now + 1.0);
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.linearRampToValueAtTime(0.15, now + 0.5);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 1.0);
+
+    // Second oscillator for dissonance
+    const osc2 = audioCtx.createOscillator();
+    const gain2 = audioCtx.createGain();
+    osc2.type = 'square';
+    osc2.frequency.setValueAtTime(250, now);
+    osc2.frequency.exponentialRampToValueAtTime(30, now + 1.2);
+    gain2.gain.setValueAtTime(0.12, now);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+    osc2.connect(gain2);
+    gain2.connect(audioCtx.destination);
+    osc2.start(now);
+    osc2.stop(now + 1.2);
+  }
+}
+
+// Sound toggle
+const soundToggleBtn = document.getElementById('sound-toggle');
+function updateSoundButton() {
+  soundToggleBtn.textContent = soundMuted ? '\u{1F507}' : '\u{1F50A}';
+}
+updateSoundButton();
+
+soundToggleBtn.addEventListener('click', () => {
+  soundMuted = !soundMuted;
+  localStorage.setItem('arcade_sound', soundMuted ? 'off' : 'on');
+  updateSoundButton();
+  if (!soundMuted) {
+    ensureAudioCtx();
+  }
+});
+
+// ============================================================
+// THEME SYSTEM
+// ============================================================
+let isLightMode = localStorage.getItem('arcade_theme') === 'light';
+const themeToggleBtn = document.getElementById('theme-toggle');
+
+function applyTheme() {
+  if (isLightMode) {
+    document.body.classList.add('light-mode');
+  } else {
+    document.body.classList.remove('light-mode');
+  }
+  themeToggleBtn.textContent = isLightMode ? '\u2600\uFE0F' : '\u{1F319}';
+}
+applyTheme();
+
+themeToggleBtn.addEventListener('click', () => {
+  isLightMode = !isLightMode;
+  localStorage.setItem('arcade_theme', isLightMode ? 'light' : 'dark');
+  applyTheme();
+});
+
+function getCanvasBg() {
+  return isLightMode ? '#d0d3e8' : '#0a0a1a';
+}
+
+function getStarAlphaMult() {
+  return isLightMode ? 0.4 : 1;
+}
+
+function getTankCenter() {
+  return isLightMode ? '#d0d3e8' : '#0a0a1a';
+}
+
+// ============================================================
+// BEST SCORE
+// ============================================================
+let bestScore = parseInt(localStorage.getItem('shooting_best')) || 0;
+
+function saveBestScore() {
+  if (score > bestScore) {
+    bestScore = score;
+    localStorage.setItem('shooting_best', bestScore);
+  }
+}
+
+// ============================================================
+// GAME STATE
+// ============================================================
 let gameRunning = false;
 let score = 0;
 let lives = 3;
@@ -280,8 +511,8 @@ function resetGame() {
 function updateHUD() {
   document.getElementById('score-display').textContent = score;
   let heartsStr = '';
-  for (let i = 0; i < lives; i++) heartsStr += '♥';
-  for (let i = lives; i < 3; i++) heartsStr += '♡';
+  for (let i = 0; i < lives; i++) heartsStr += '\u2665';
+  for (let i = lives; i < 3; i++) heartsStr += '\u2661';
   document.getElementById('lives-display').textContent = heartsStr;
 }
 
@@ -362,7 +593,7 @@ function drawEnemy(e) {
     ctx.beginPath();
     ctx.arc(e.x + e.w / 2, e.y + e.h / 2, e.w / 2, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#0a0a1a';
+    ctx.fillStyle = getTankCenter();
     ctx.beginPath();
     ctx.arc(e.x + e.w / 2, e.y + e.h / 2, e.w / 4, 0, Math.PI * 2);
     ctx.fill();
@@ -442,6 +673,7 @@ function shoot() {
     speed: 8,
     color: '#00ff41'
   });
+  playSound('shoot');
 }
 
 // Collision detection
@@ -515,6 +747,7 @@ function update() {
           enemies.splice(i, 1);
           hit = true;
           updateHUD();
+          playSound('explosion');
         }
         break;
       }
@@ -528,6 +761,7 @@ function update() {
       enemies.splice(i, 1);
       lives--;
       updateHUD();
+      playSound('playerHit');
       if (lives <= 0) {
         gameOver();
         return;
@@ -556,13 +790,14 @@ function update() {
 // Draw
 function draw() {
   // Clear
-  ctx.fillStyle = '#0a0a1a';
+  ctx.fillStyle = getCanvasBg();
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Stars
+  const starMult = getStarAlphaMult();
   for (const s of stars) {
-    const alpha = s.brightness * 0.8;
-    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+    const alpha = s.brightness * 0.8 * starMult;
+    ctx.fillStyle = `rgba(${isLightMode ? '80, 80, 120' : '255, 255, 255'}, ${alpha})`;
     ctx.fillRect(s.x, s.y, s.size, s.size);
   }
 
@@ -613,13 +848,17 @@ function startGame() {
   document.getElementById('game-over-screen').style.display = 'none';
   resetGame();
   gameRunning = true;
+  ensureAudioCtx();
   gameLoop();
 }
 
 function gameOver() {
   gameRunning = false;
   cancelAnimationFrame(animFrame);
+  saveBestScore();
+  playSound('gameOver');
   document.getElementById('final-score').textContent = score;
+  document.getElementById('best-score').textContent = bestScore;
   document.getElementById('game-over-screen').style.display = 'block';
 }
 
@@ -651,12 +890,13 @@ document.getElementById('play-again-btn').addEventListener('click', startGame);
 initStars();
 function bgDraw() {
   if (gameRunning) return;
-  ctx.fillStyle = '#0a0a1a';
+  ctx.fillStyle = getCanvasBg();
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const starMult = getStarAlphaMult();
   for (const s of stars) {
     s.y += s.speed * 0.5;
     if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; }
-    ctx.fillStyle = `rgba(255,255,255,${s.brightness * 0.5})`;
+    ctx.fillStyle = `rgba(${isLightMode ? '80, 80, 120' : '255,255,255'},${s.brightness * 0.5 * starMult})`;
     ctx.fillRect(s.x, s.y, s.size, s.size);
   }
   requestAnimationFrame(bgDraw);

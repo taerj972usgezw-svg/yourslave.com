@@ -12,41 +12,90 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --bg: #0a0a1a;
+            --bg2: rgba(15, 15, 40, 0.8);
+            --text: #ffffff;
+            --text-sub: #aaa;
+            --border: rgba(255, 255, 255, 0.1);
+            --grid-color: rgba(0, 255, 255, 0.03);
+        }
+
+        body.light {
+            --bg: #e8eaf6;
+            --bg2: rgba(255, 255, 255, 0.9);
+            --text: #1a1a2e;
+            --text-sub: #555;
+            --border: rgba(0, 0, 0, 0.15);
+            --grid-color: rgba(0, 0, 100, 0.05);
+        }
+
         body {
-            background: #0a0a1a;
-            color: #ffffff;
+            background: var(--bg);
+            color: var(--text);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
+            transition: background 0.4s, color 0.4s;
         }
 
-        /* Animated background grid */
         body::before {
             content: '';
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background:
-                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
             background-size: 50px 50px;
             z-index: 0;
-            animation: gridMove 20s linear infinite;
-        }
-
-        @keyframes gridMove {
-            0% { transform: perspective(500px) rotateX(0deg); }
-            100% { transform: perspective(500px) rotateX(2deg); }
         }
 
         header {
             position: relative;
             z-index: 1;
             text-align: center;
-            padding: 3rem 1rem;
+            padding: 2rem 1rem 1.5rem;
             border-bottom: 2px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto 1rem;
+            padding: 0 1rem;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+        }
+
+        .control-btn {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .welcome-text {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.6rem;
+            color: #00ffff;
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+            cursor: pointer;
         }
 
         h1 {
@@ -58,7 +107,6 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             animation: gradientShift 4s ease infinite;
-            text-shadow: none;
             filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.3));
         }
 
@@ -85,62 +133,70 @@
             padding: 2rem;
         }
 
+        /* Section titles */
+        .section-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
         .games-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
         }
 
         .game-card {
-            background: rgba(15, 15, 40, 0.8);
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: var(--bg2);
+            border: 2px solid var(--border);
             border-radius: 16px;
-            padding: 2rem;
+            padding: 1.5rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.4s ease;
             position: relative;
             overflow: hidden;
             text-decoration: none;
-            color: white;
+            color: var(--text);
             display: block;
         }
 
         .game-card::before {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
             background: radial-gradient(circle, var(--glow-color) 0%, transparent 70%);
             opacity: 0;
             transition: opacity 0.4s ease;
             z-index: 0;
         }
 
-        .game-card:hover::before {
-            opacity: 0.1;
-        }
+        .game-card:hover::before { opacity: 0.1; }
 
         .game-card:hover {
             transform: translateY(-8px) scale(1.02);
             border-color: var(--glow-color);
-            box-shadow:
-                0 0 20px var(--glow-color),
-                0 0 40px rgba(0, 0, 0, 0.5),
-                inset 0 0 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 20px var(--glow-color), 0 0 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.3);
         }
 
         .game-card.pink { --glow-color: #ff00ff; }
         .game-card.cyan { --glow-color: #00ffff; }
         .game-card.green { --glow-color: #00ff41; }
         .game-card.yellow { --glow-color: #ffff00; }
+        .game-card.orange { --glow-color: #ff6600; }
+        .game-card.purple { --glow-color: #aa00ff; }
+        .game-card.amber { --glow-color: #ffaa00; }
+        .game-card.red { --glow-color: #ff0044; }
 
         .game-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
+            font-size: 3.5rem;
+            margin-bottom: 0.8rem;
             position: relative;
             z-index: 1;
             display: block;
@@ -148,8 +204,8 @@
 
         .game-title {
             font-family: 'Press Start 2P', cursive;
-            font-size: 1rem;
-            margin-bottom: 0.8rem;
+            font-size: 0.85rem;
+            margin-bottom: 0.6rem;
             position: relative;
             z-index: 1;
             color: var(--glow-color);
@@ -157,25 +213,161 @@
         }
 
         .game-desc {
-            font-size: 0.9rem;
-            color: #aaa;
-            line-height: 1.6;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            line-height: 1.5;
             position: relative;
             z-index: 1;
         }
 
         .game-badge {
             display: inline-block;
-            padding: 0.3rem 0.8rem;
+            padding: 0.25rem 0.6rem;
             border-radius: 20px;
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             font-family: 'Press Start 2P', cursive;
-            margin-top: 1rem;
+            margin-top: 0.8rem;
             position: relative;
             z-index: 1;
             border: 1px solid var(--glow-color);
             color: var(--glow-color);
             text-shadow: 0 0 5px var(--glow-color);
+        }
+
+        .game-best {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.55rem;
+            color: var(--glow-color);
+            margin-top: 0.6rem;
+            position: relative;
+            z-index: 1;
+            opacity: 0.8;
+        }
+
+        /* Leaderboard */
+        .leaderboard {
+            background: var(--bg2);
+            border: 2px solid rgba(255, 0, 255, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .leaderboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .lb-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        body.light .lb-item {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .lb-game {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.6rem;
+            color: #00ffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .lb-score {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.2rem;
+            color: #ffff00;
+            text-shadow: 0 0 8px rgba(255, 255, 0, 0.5);
+        }
+
+        .lb-label {
+            font-size: 0.7rem;
+            color: var(--text-sub);
+            margin-top: 0.3rem;
+        }
+
+        /* Nickname Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: #0f0f2a;
+            border: 2px solid #00ffff;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        }
+
+        body.light .modal {
+            background: #fff;
+            border-color: #4a4aff;
+        }
+
+        .modal h2 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            color: #00ffff;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #00ffff;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            text-align: center;
+            outline: none;
+        }
+
+        body.light .modal input {
+            background: #f0f0ff;
+            color: #1a1a2e;
+            border-color: #4a4aff;
+        }
+
+        .modal input:focus {
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        }
+
+        .modal button {
+            margin-top: 1rem;
+            padding: 0.8rem 2rem;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+            background: linear-gradient(135deg, #00ffff, #00ff41);
+            color: #0a0a1a;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
         }
 
         footer {
@@ -194,7 +386,6 @@
             letter-spacing: 2px;
         }
 
-        /* Floating particles */
         .particle {
             position: fixed;
             border-radius: 50%;
@@ -213,46 +404,111 @@
         @media (max-width: 768px) {
             h1 { font-size: 1.8rem; }
             .subtitle { font-size: 0.6rem; letter-spacing: 2px; }
-            .games-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            .games-grid { grid-template-columns: 1fr; gap: 1rem; }
             .container { padding: 1rem; }
+            .header-top { flex-direction: column; gap: 0.5rem; }
+            .leaderboard-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
 <body>
+    <!-- Nickname Modal -->
+    <div class="modal-overlay" id="nicknameModal">
+        <div class="modal">
+            <h2>닉네임을 입력하세요</h2>
+            <input type="text" id="nicknameInput" placeholder="닉네임..." maxlength="12" autofocus>
+            <br>
+            <button onclick="saveNickname()">확인</button>
+        </div>
+    </div>
+
     <header>
+        <div class="header-top">
+            <span class="welcome-text" id="welcomeText" onclick="showNicknameModal()" title="클릭하여 닉네임 변경"></span>
+            <div class="header-controls">
+                <button class="control-btn" id="themeToggle" onclick="toggleTheme()" title="다크/라이트 모드">🌙</button>
+                <button class="control-btn" id="soundToggle" onclick="toggleSound()" title="사운드 ON/OFF">🔊</button>
+            </div>
+        </div>
         <h1>ARCADE HUB</h1>
         <p class="subtitle">:: SELECT YOUR GAME ::</p>
     </header>
 
     <div class="container">
+        <!-- Games Grid -->
+        <div class="section-title">🎮 GAMES</div>
         <div class="games-grid">
             <a href="games/flappy.html" class="game-card pink">
                 <span class="game-icon">🐦</span>
                 <div class="game-title">FLAPPY BIRD</div>
-                <p class="game-desc">파이프 사이를 날아가는 새를 조종하세요! 스페이스바로 점프!</p>
+                <p class="game-desc">파이프 사이를 날아가는 새를 조종하세요!</p>
                 <span class="game-badge">CLICK / SPACE</span>
+                <div class="game-best" id="best-flappy"></div>
             </a>
 
             <a href="games/breakout.html" class="game-card cyan">
                 <span class="game-icon">🧱</span>
                 <div class="game-title">BREAKOUT</div>
-                <p class="game-desc">공을 튕겨 벽돌을 모두 부수세요! 마우스로 패들을 조종!</p>
+                <p class="game-desc">공을 튕겨 벽돌을 모두 부수세요!</p>
                 <span class="game-badge">MOUSE</span>
+                <div class="game-best" id="best-breakout"></div>
             </a>
 
             <a href="games/shooting.html" class="game-card green">
                 <span class="game-icon">🚀</span>
                 <div class="game-title">SPACE SHOOTER</div>
-                <p class="game-desc">우주를 누비며 적들을 물리치세요! 방향키로 이동, 스페이스바로 발사!</p>
+                <p class="game-desc">우주를 누비며 적들을 물리치세요!</p>
                 <span class="game-badge">ARROWS / SPACE</span>
+                <div class="game-best" id="best-shooting"></div>
             </a>
 
             <a href="games/runner.html" class="game-card yellow">
                 <span class="game-icon">🦖</span>
                 <div class="game-title">DINO RUNNER</div>
-                <p class="game-desc">달려오는 장애물을 점프로 피하세요! 속도가 점점 빨라집니다!</p>
+                <p class="game-desc">장애물을 점프로 피하세요!</p>
                 <span class="game-badge">SPACE</span>
+                <div class="game-best" id="best-runner"></div>
             </a>
+
+            <a href="games/snake.html" class="game-card orange">
+                <span class="game-icon">🐍</span>
+                <div class="game-title">SNAKE</div>
+                <p class="game-desc">먹이를 먹으며 뱀을 키우세요!</p>
+                <span class="game-badge">ARROWS</span>
+                <div class="game-best" id="best-snake"></div>
+            </a>
+
+            <a href="games/2048.html" class="game-card purple">
+                <span class="game-icon">🔢</span>
+                <div class="game-title">2048</div>
+                <p class="game-desc">숫자를 합쳐 2048을 만드세요!</p>
+                <span class="game-badge">ARROWS / SWIPE</span>
+                <div class="game-best" id="best-2048"></div>
+            </a>
+
+            <a href="games/pacman.html" class="game-card amber">
+                <span class="game-icon">👾</span>
+                <div class="game-title">PAC-MAN</div>
+                <p class="game-desc">미로에서 점을 먹고 유령을 피하세요!</p>
+                <span class="game-badge">ARROWS</span>
+                <div class="game-best" id="best-pacman"></div>
+            </a>
+
+            <a href="games/pong.html" class="game-card red">
+                <span class="game-icon">🏓</span>
+                <div class="game-title">PONG</div>
+                <p class="game-desc">클래식 탁구 게임! AI 또는 2P 대전!</p>
+                <span class="game-badge">W/S vs ↑/↓</span>
+                <div class="game-best" id="best-pong"></div>
+            </a>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="section-title">🏆 내 기록</div>
+        <div class="leaderboard">
+            <div class="leaderboard-grid" id="leaderboardGrid">
+                <!-- Populated by JS -->
+            </div>
         </div>
     </div>
 
@@ -261,26 +517,139 @@
     </footer>
 
     <script>
-        // Create floating particles
+        // Game list for leaderboard
+        const games = [
+            { id: 'flappy', name: 'FLAPPY BIRD', key: 'flappy_best' },
+            { id: 'breakout', name: 'BREAKOUT', key: 'breakout_best' },
+            { id: 'shooting', name: 'SPACE SHOOTER', key: 'shooting_best' },
+            { id: 'runner', name: 'DINO RUNNER', key: 'runner_best' },
+            { id: 'snake', name: 'SNAKE', key: 'snake_best' },
+            { id: '2048', name: '2048', key: '2048_best' },
+            { id: 'pacman', name: 'PAC-MAN', key: 'pacman_best' },
+            { id: 'pong', name: 'PONG', key: 'pong_best' }
+        ];
+
+        // Nickname
+        function initNickname() {
+            const nick = localStorage.getItem('arcade_nickname');
+            if (!nick) {
+                document.getElementById('nicknameModal').classList.add('active');
+            } else {
+                document.getElementById('welcomeText').textContent = `환영합니다, ${nick}님`;
+            }
+        }
+
+        function showNicknameModal() {
+            const input = document.getElementById('nicknameInput');
+            input.value = localStorage.getItem('arcade_nickname') || '';
+            document.getElementById('nicknameModal').classList.add('active');
+            input.focus();
+        }
+
+        function saveNickname() {
+            const nick = document.getElementById('nicknameInput').value.trim();
+            if (nick) {
+                localStorage.setItem('arcade_nickname', nick);
+                document.getElementById('welcomeText').textContent = `환영합니다, ${nick}님`;
+                document.getElementById('nicknameModal').classList.remove('active');
+                playBeep(600, 0.1);
+            }
+        }
+
+        document.getElementById('nicknameInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') saveNickname();
+        });
+
+        // Theme
+        function initTheme() {
+            const theme = localStorage.getItem('arcade_theme') || 'dark';
+            if (theme === 'light') {
+                document.body.classList.add('light');
+                document.getElementById('themeToggle').textContent = '☀️';
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light');
+            const isLight = document.body.classList.contains('light');
+            localStorage.setItem('arcade_theme', isLight ? 'light' : 'dark');
+            document.getElementById('themeToggle').textContent = isLight ? '☀️' : '🌙';
+            playBeep(isLight ? 800 : 400, 0.08);
+        }
+
+        // Sound
+        let soundEnabled = true;
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function initSound() {
+            soundEnabled = localStorage.getItem('arcade_sound') !== 'off';
+            document.getElementById('soundToggle').textContent = soundEnabled ? '🔊' : '🔇';
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            localStorage.setItem('arcade_sound', soundEnabled ? 'on' : 'off');
+            document.getElementById('soundToggle').textContent = soundEnabled ? '🔊' : '🔇';
+        }
+
+        function playBeep(freq, duration) {
+            if (!soundEnabled) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.value = freq;
+            osc.type = 'square';
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        // Leaderboard
+        function updateLeaderboard() {
+            const grid = document.getElementById('leaderboardGrid');
+            grid.innerHTML = '';
+            games.forEach(game => {
+                const score = localStorage.getItem(game.key) || 0;
+                const el = document.getElementById(`best-${game.id}`);
+                if (el) el.textContent = score > 0 ? `BEST: ${score}` : '';
+
+                const item = document.createElement('div');
+                item.className = 'lb-item';
+                item.innerHTML = `
+                    <div class="lb-game">${game.name}</div>
+                    <div class="lb-score">${score}</div>
+                    <div class="lb-label">최고 점수</div>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        // Hover sound
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('mouseenter', () => playBeep(500, 0.05));
+            card.addEventListener('click', () => playBeep(700, 0.1));
+        });
+
+        // Particles
         function createParticles() {
             const colors = ['#ff00ff', '#00ffff', '#00ff41', '#ffff00'];
             for (let i = 0; i < 20; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
+                const p = document.createElement('div');
+                p.className = 'particle';
                 const size = Math.random() * 4 + 2;
                 const color = colors[Math.floor(Math.random() * colors.length)];
-                particle.style.cssText = `
-                    width: ${size}px;
-                    height: ${size}px;
-                    background: ${color};
-                    box-shadow: 0 0 ${size * 2}px ${color};
-                    left: ${Math.random() * 100}%;
-                    animation-duration: ${Math.random() * 15 + 10}s;
-                    animation-delay: ${Math.random() * 10}s;
-                `;
-                document.body.appendChild(particle);
+                p.style.cssText = `width:${size}px;height:${size}px;background:${color};box-shadow:0 0 ${size*2}px ${color};left:${Math.random()*100}%;animation-duration:${Math.random()*15+10}s;animation-delay:${Math.random()*10}s;`;
+                document.body.appendChild(p);
             }
         }
+
+        // Init
+        initTheme();
+        initSound();
+        initNickname();
+        updateLeaderboard();
         createParticles();
     </script>
 </body>

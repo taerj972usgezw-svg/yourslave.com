@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>퐁 - YourSlave</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0a0a1a;
+  color: #ff0044;
+  font-family: 'Press Start 2P', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+  transition: background 0.3s, color 0.3s;
+}
+body.light {
+  background: #f0f0f0;
+  color: #cc0033;
+}
+#top-bar {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  font-size: 11px;
+}
+#top-bar a {
+  color: #ff0044;
+  text-decoration: none;
+  text-shadow: 0 0 8px #ff0044;
+  transition: color 0.2s;
+}
+#top-bar a:hover { color: #fff; text-shadow: 0 0 12px #fff; }
+body.light #top-bar a { color: #cc0033; text-shadow: none; }
+body.light #top-bar a:hover { color: #990022; }
+.top-controls { display: flex; gap: 12px; align-items: center; }
+.icon-btn {
+  background: none;
+  border: 1px solid #ff004466;
+  color: #ff0044;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  text-shadow: 0 0 6px #ff0044;
+  transition: all 0.2s;
+}
+.icon-btn:hover { background: #ff004422; border-color: #ff0044; }
+body.light .icon-btn { color: #cc0033; text-shadow: none; border-color: #cc003366; }
+#game-container {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid #ff004433;
+  box-shadow: 0 0 20px #ff004422;
+  background: #0a0a1a;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+body.light canvas {
+  background: #e8e8e8;
+  border-color: #cc003333;
+  box-shadow: 0 0 10px #cc003311;
+}
+#overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(10,10,26,0.88);
+  gap: 24px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+body.light #overlay { background: rgba(240,240,240,0.9); }
+#overlay.active { opacity: 1; pointer-events: auto; }
+#overlay h2 {
+  font-size: 24px;
+  color: #ff0044;
+  text-shadow: 0 0 20px #ff0044, 0 0 40px #ff004488;
+  text-align: center;
+  line-height: 1.6;
+}
+body.light #overlay h2 { text-shadow: none; color: #cc0033; }
+#overlay .sub-text {
+  font-size: 12px;
+  color: #ff0044aa;
+  text-shadow: 0 0 8px #ff004444;
+}
+body.light #overlay .sub-text { text-shadow: none; color: #cc003388; }
+.btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 13px;
+  padding: 14px 28px;
+  border: 2px solid #ff0044;
+  background: transparent;
+  color: #ff0044;
+  cursor: pointer;
+  text-shadow: 0 0 8px #ff0044;
+  box-shadow: 0 0 15px #ff004444;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+.btn:hover {
+  background: #ff0044;
+  color: #0a0a1a;
+  text-shadow: none;
+  box-shadow: 0 0 30px #ff004488;
+}
+body.light .btn {
+  border-color: #cc0033;
+  color: #cc0033;
+  text-shadow: none;
+  box-shadow: none;
+}
+body.light .btn:hover {
+  background: #cc0033;
+  color: #fff;
+}
+.btn-group { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+#best-score {
+  font-size: 10px;
+  color: #ff004488;
+  text-shadow: 0 0 6px #ff004433;
+}
+body.light #best-score { text-shadow: none; }
+</style>
+</head>
+<body>
+<div id="top-bar">
+  <a href="../index.html">&#9664; 허브로 돌아가기</a>
+  <div class="top-controls">
+    <button class="icon-btn" id="mute-btn" title="소리">🔊</button>
+    <button class="icon-btn" id="theme-btn" title="테마">🌙</button>
+  </div>
+</div>
+<div id="game-container">
+  <canvas id="game" width="800" height="500"></canvas>
+  <div id="overlay" class="active">
+    <h2>퐁</h2>
+    <div class="sub-text">모드를 선택하세요</div>
+    <div class="btn-group">
+      <button class="btn" id="btn-1p">1인용 (vs AI)</button>
+      <button class="btn" id="btn-2p">2인용</button>
+    </div>
+    <div id="best-score"></div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const muteBtn = document.getElementById('mute-btn');
+const themeBtn = document.getElementById('theme-btn');
+const bestScoreEl = document.getElementById('best-score');
+
+// --- Theme ---
+let darkMode = localStorage.getItem('arcade_theme') !== 'light';
+function applyTheme() {
+  document.body.classList.toggle('light', !darkMode);
+  themeBtn.textContent = darkMode ? '🌙' : '☀️';
+}
+applyTheme();
+themeBtn.addEventListener('click', () => {
+  darkMode = !darkMode;
+  localStorage.setItem('arcade_theme', darkMode ? 'dark' : 'light');
+  applyTheme();
+});
+
+// --- Sound ---
+let soundOn = localStorage.getItem('arcade_sound') !== 'off';
+muteBtn.textContent = soundOn ? '🔊' : '🔇';
+muteBtn.addEventListener('click', () => {
+  soundOn = !soundOn;
+  localStorage.setItem('arcade_sound', soundOn ? 'on' : 'off');
+  muteBtn.textContent = soundOn ? '🔊' : '🔇';
+});
+
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+function playSound(freq, type, duration, vol) {
+  if (!soundOn) return;
+  ensureAudio();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  gain.gain.setValueAtTime(vol || 0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+function sndPaddleHit() { playSound(440, 'square', 0.08, 0.12); }
+function sndWallHit() { playSound(300, 'triangle', 0.06, 0.1); }
+function sndScore() { playSound(220, 'sawtooth', 0.3, 0.12); }
+function sndGameOver() {
+  if (!soundOn) return;
+  ensureAudio();
+  [523, 392, 330, 262].forEach((f, i) => {
+    setTimeout(() => playSound(f, 'square', 0.25, 0.12), i * 180);
+  });
+}
+
+// --- Game State ---
+const W = 800, H = 500;
+const PADDLE_W = 12, PADDLE_H = 80;
+const BALL_R = 8;
+const WIN_SCORE = 10;
+const BALL_SPEED_INIT = 5;
+const BALL_SPEED_INC = 0.15;
+const PADDLE_SPEED = 6;
+
+let mode = null; // '1p' or '2p'
+let running = false;
+let animId = null;
+
+let p1 = { x: 20, y: H / 2 - PADDLE_H / 2, w: PADDLE_W, h: PADDLE_H, score: 0, dy: 0 };
+let p2 = { x: W - 20 - PADDLE_W, y: H / 2 - PADDLE_H / 2, w: PADDLE_W, h: PADDLE_H, score: 0, dy: 0 };
+let ball = { x: W / 2, y: H / 2, r: BALL_R, dx: 0, dy: 0, speed: BALL_SPEED_INIT };
+let rallyCount = 0;
+
+// --- Keys ---
+const keys = {};
+window.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (['ArrowUp','ArrowDown','KeyW','KeyS'].includes(e.code)) e.preventDefault();
+});
+window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+// --- Best Score ---
+function loadBest() {
+  const b = parseInt(localStorage.getItem('pong_best')) || 0;
+  bestScoreEl.textContent = b > 0 ? `최고 점수: ${b}` : '';
+  return b;
+}
+function saveBest(s) {
+  const prev = parseInt(localStorage.getItem('pong_best')) || 0;
+  if (s > prev) localStorage.setItem('pong_best', s);
+}
+loadBest();
+
+// --- Mode Selection ---
+document.getElementById('btn-1p').addEventListener('click', () => startGame('1p'));
+document.getElementById('btn-2p').addEventListener('click', () => startGame('2p'));
+
+function showOverlay(html) {
+  overlay.innerHTML = html;
+  overlay.classList.add('active');
+}
+function hideOverlay() { overlay.classList.remove('active'); }
+
+function resetBall(direction) {
+  ball.x = W / 2;
+  ball.y = H / 2;
+  const angle = (Math.random() * 0.8 - 0.4); // -0.4 to 0.4 radians
+  ball.speed = BALL_SPEED_INIT + rallyCount * 0.01;
+  ball.dx = Math.cos(angle) * ball.speed * direction;
+  ball.dy = Math.sin(angle) * ball.speed;
+  rallyCount = 0;
+}
+
+function resetPaddles() {
+  p1.y = H / 2 - PADDLE_H / 2; p1.score = 0; p1.dy = 0;
+  p2.y = H / 2 - PADDLE_H / 2; p2.score = 0; p2.dy = 0;
+}
+
+function startGame(m) {
+  ensureAudio();
+  mode = m;
+  running = true;
+  resetPaddles();
+  resetBall(Math.random() < 0.5 ? 1 : -1);
+  hideOverlay();
+  if (animId) cancelAnimationFrame(animId);
+  loop();
+}
+
+// --- AI ---
+function updateAI() {
+  const targetY = ball.y - PADDLE_H / 2;
+  const diff = targetY - p2.y;
+  const aiSpeed = PADDLE_SPEED * 0.75;
+  if (Math.abs(diff) > 8) {
+    p2.y += Math.sign(diff) * Math.min(aiSpeed, Math.abs(diff));
+  }
+}
+
+// --- Update ---
+function update() {
+  // Player 1 movement
+  if (keys['KeyW']) p1.y -= PADDLE_SPEED;
+  if (keys['KeyS']) p1.y += PADDLE_SPEED;
+
+  // Player 2 or AI
+  if (mode === '2p') {
+    if (keys['ArrowUp']) p2.y -= PADDLE_SPEED;
+    if (keys['ArrowDown']) p2.y += PADDLE_SPEED;
+  } else {
+    updateAI();
+  }
+
+  // Clamp paddles
+  p1.y = Math.max(0, Math.min(H - PADDLE_H, p1.y));
+  p2.y = Math.max(0, Math.min(H - PADDLE_H, p2.y));
+
+  // Move ball
+  ball.x += ball.dx;
+  ball.y += ball.dy;
+
+  // Wall bounce (top/bottom)
+  if (ball.y - ball.r <= 0) {
+    ball.y = ball.r;
+    ball.dy = Math.abs(ball.dy);
+    sndWallHit();
+  }
+  if (ball.y + ball.r >= H) {
+    ball.y = H - ball.r;
+    ball.dy = -Math.abs(ball.dy);
+    sndWallHit();
+  }
+
+  // Paddle collision - P1
+  if (ball.dx < 0 &&
+      ball.x - ball.r <= p1.x + p1.w &&
+      ball.x + ball.r >= p1.x &&
+      ball.y >= p1.y && ball.y <= p1.y + PADDLE_H) {
+    const hitPos = (ball.y - p1.y) / PADDLE_H - 0.5; // -0.5 to 0.5
+    rallyCount++;
+    ball.speed = BALL_SPEED_INIT + rallyCount * BALL_SPEED_INC;
+    const angle = hitPos * Math.PI * 0.45;
+    ball.dx = Math.cos(angle) * ball.speed;
+    ball.dy = Math.sin(angle) * ball.speed;
+    ball.x = p1.x + p1.w + ball.r;
+    sndPaddleHit();
+  }
+
+  // Paddle collision - P2
+  if (ball.dx > 0 &&
+      ball.x + ball.r >= p2.x &&
+      ball.x - ball.r <= p2.x + p2.w &&
+      ball.y >= p2.y && ball.y <= p2.y + PADDLE_H) {
+    const hitPos = (ball.y - p2.y) / PADDLE_H - 0.5;
+    rallyCount++;
+    ball.speed = BALL_SPEED_INIT + rallyCount * BALL_SPEED_INC;
+    const angle = hitPos * Math.PI * 0.45;
+    ball.dx = -Math.cos(angle) * ball.speed;
+    ball.dy = Math.sin(angle) * ball.speed;
+    ball.x = p2.x - ball.r;
+    sndPaddleHit();
+  }
+
+  // Score
+  if (ball.x - ball.r < 0) {
+    p2.score++;
+    sndScore();
+    if (p2.score >= WIN_SCORE) return gameOver(2);
+    resetBall(1);
+  }
+  if (ball.x + ball.r > W) {
+    p1.score++;
+    sndScore();
+    if (p1.score >= WIN_SCORE) return gameOver(1);
+    resetBall(-1);
+  }
+}
+
+function gameOver(winner) {
+  running = false;
+  sndGameOver();
+  const maxScore = Math.max(p1.score, p2.score);
+  saveBest(maxScore);
+  const winnerLabel = winner === 1 ? '플레이어 1' : (mode === '1p' ? 'AI' : '플레이어 2');
+  showOverlay(`
+    <h2>${winnerLabel} 승리!</h2>
+    <div class="sub-text">점수: ${p1.score} - ${p2.score}</div>
+    <div id="best-score">${loadBest() > 0 ? '최고 점수: ' + loadBest() : ''}</div>
+    <div class="btn-group">
+      <button class="btn" onclick="startGame('${mode}')">다시 하기</button>
+      <button class="btn" onclick="showMenu()">메뉴</button>
+    </div>
+  `);
+}
+
+function showMenu() {
+  running = false;
+  if (animId) cancelAnimationFrame(animId);
+  loadBest();
+  showOverlay(`
+    <h2>퐁</h2>
+    <div class="sub-text">모드를 선택하세요</div>
+    <div class="btn-group">
+      <button class="btn" onclick="startGame('1p')">1인용 (vs AI)</button>
+      <button class="btn" onclick="startGame('2p')">2인용</button>
+    </div>
+    <div id="best-score">${loadBest() > 0 ? '최고 점수: ' + loadBest() : ''}</div>
+  `);
+}
+
+// --- Draw ---
+function getAccent() { return darkMode ? '#ff0044' : '#cc0033'; }
+function getBg() { return darkMode ? '#0a0a1a' : '#e8e8e8'; }
+function getGlow() { return darkMode ? 'rgba(255,0,68,' : 'rgba(204,0,51,'; }
+
+function draw() {
+  const accent = getAccent();
+  const bg = getBg();
+  const glow = getGlow();
+
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Center dashed line
+  ctx.setLineDash([10, 10]);
+  ctx.strokeStyle = accent + '44';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(W / 2, 0);
+  ctx.lineTo(W / 2, H);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Scores
+  ctx.font = '36px "Press Start 2P"';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = accent;
+  if (darkMode) ctx.shadowColor = accent, ctx.shadowBlur = 15;
+  ctx.fillText(p1.score, W / 4, 55);
+  ctx.fillText(p2.score, W * 3 / 4, 55);
+  ctx.shadowBlur = 0;
+
+  // Labels
+  ctx.font = '9px "Press Start 2P"';
+  ctx.fillStyle = accent + '88';
+  ctx.fillText('P1', W / 4, 75);
+  ctx.fillText(mode === '1p' ? 'AI' : 'P2', W * 3 / 4, 75);
+
+  // Paddles with glow
+  if (darkMode) {
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = 20;
+  }
+  ctx.fillStyle = accent;
+  ctx.fillRect(p1.x, p1.y, p1.w, p1.h);
+  ctx.fillRect(p2.x, p2.y, p2.w, p2.h);
+  ctx.shadowBlur = 0;
+
+  // Ball with glow
+  if (darkMode) {
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = 25;
+  }
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+  ctx.fillStyle = accent;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Extra glow layers in dark mode
+  if (darkMode) {
+    // Paddle glow
+    ctx.fillStyle = glow + '0.08)';
+    ctx.fillRect(p1.x - 6, p1.y - 6, p1.w + 12, p1.h + 12);
+    ctx.fillRect(p2.x - 6, p2.y - 6, p2.w + 12, p2.h + 12);
+    // Ball glow
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.r + 10, 0, Math.PI * 2);
+    ctx.fillStyle = glow + '0.1)';
+    ctx.fill();
+  }
+}
+
+// --- Loop ---
+function loop() {
+  if (!running) return;
+  update();
+  draw();
+  animId = requestAnimationFrame(loop);
+}
+
+// Draw initial idle frame
+draw();
+
+// --- Responsive ---
+window.addEventListener('resize', () => {
+  // Canvas CSS handles scaling, no JS needed
+});
+
+// Expose for inline onclick
+window.startGame = startGame;
+window.showMenu = showMenu;
+</script>
+</body>
+</html>
