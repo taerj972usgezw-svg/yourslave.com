@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARCADE HUB - 게임 모음</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a1a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background grid */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 0;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: perspective(500px) rotateX(0deg); }
+            100% { transform: perspective(500px) rotateX(2deg); }
+        }
+
+        header {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 3rem 1rem;
+            border-bottom: 2px solid rgba(0, 255, 255, 0.2);
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 3rem;
+            background: linear-gradient(90deg, #ff00ff, #00ffff, #00ff41, #ffff00, #ff00ff);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 4s ease infinite;
+            text-shadow: none;
+            filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.3));
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .subtitle {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            color: #00ffff;
+            margin-top: 1rem;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            letter-spacing: 4px;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .game-card {
+            background: rgba(15, 15, 40, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            color: white;
+            display: block;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, var(--glow-color) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 0;
+        }
+
+        .game-card:hover::before {
+            opacity: 0.1;
+        }
+
+        .game-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--glow-color);
+            box-shadow:
+                0 0 20px var(--glow-color),
+                0 0 40px rgba(0, 0, 0, 0.5),
+                inset 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-card.pink { --glow-color: #ff00ff; }
+        .game-card.cyan { --glow-color: #00ffff; }
+        .game-card.green { --glow-color: #00ff41; }
+        .game-card.yellow { --glow-color: #ffff00; }
+
+        .game-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+            display: block;
+        }
+
+        .game-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
+            margin-bottom: 0.8rem;
+            position: relative;
+            z-index: 1;
+            color: var(--glow-color);
+            text-shadow: 0 0 10px var(--glow-color);
+        }
+
+        .game-desc {
+            font-size: 0.9rem;
+            color: #aaa;
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+
+        .game-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-family: 'Press Start 2P', cursive;
+            margin-top: 1rem;
+            position: relative;
+            z-index: 1;
+            border: 1px solid var(--glow-color);
+            color: var(--glow-color);
+            text-shadow: 0 0 5px var(--glow-color);
+        }
+
+        footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 2rem;
+            border-top: 2px solid rgba(0, 255, 255, 0.1);
+            margin-top: 3rem;
+        }
+
+        footer p {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.6rem;
+            color: #444;
+            letter-spacing: 2px;
+        }
+
+        /* Floating particles */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8rem; }
+            .subtitle { font-size: 0.6rem; letter-spacing: 2px; }
+            .games-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            .container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>ARCADE HUB</h1>
+        <p class="subtitle">:: SELECT YOUR GAME ::</p>
+    </header>
+
+    <div class="container">
+        <div class="games-grid">
+            <a href="games/flappy.html" class="game-card pink">
+                <span class="game-icon">🐦</span>
+                <div class="game-title">FLAPPY BIRD</div>
+                <p class="game-desc">파이프 사이를 날아가는 새를 조종하세요! 스페이스바로 점프!</p>
+                <span class="game-badge">CLICK / SPACE</span>
+            </a>
+
+            <a href="games/breakout.html" class="game-card cyan">
+                <span class="game-icon">🧱</span>
+                <div class="game-title">BREAKOUT</div>
+                <p class="game-desc">공을 튕겨 벽돌을 모두 부수세요! 마우스로 패들을 조종!</p>
+                <span class="game-badge">MOUSE</span>
+            </a>
+
+            <a href="games/shooting.html" class="game-card green">
+                <span class="game-icon">🚀</span>
+                <div class="game-title">SPACE SHOOTER</div>
+                <p class="game-desc">우주를 누비며 적들을 물리치세요! 방향키로 이동, 스페이스바로 발사!</p>
+                <span class="game-badge">ARROWS / SPACE</span>
+            </a>
+
+            <a href="games/runner.html" class="game-card yellow">
+                <span class="game-icon">🦖</span>
+                <div class="game-title">DINO RUNNER</div>
+                <p class="game-desc">달려오는 장애물을 점프로 피하세요! 속도가 점점 빨라집니다!</p>
+                <span class="game-badge">SPACE</span>
+            </a>
+        </div>
+    </div>
+
+    <footer>
+        <p>YOURSLAVE.COM ARCADE HUB</p>
+    </footer>
+
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const colors = ['#ff00ff', '#00ffff', '#00ff41', '#ffff00'];
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const size = Math.random() * 4 + 2;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.cssText = `
+                    width: ${size}px;
+                    height: ${size}px;
+                    background: ${color};
+                    box-shadow: 0 0 ${size * 2}px ${color};
+                    left: ${Math.random() * 100}%;
+                    animation-duration: ${Math.random() * 15 + 10}s;
+                    animation-delay: ${Math.random() * 10}s;
+                `;
+                document.body.appendChild(particle);
+            }
+        }
+        createParticles();
+    </script>
+</body>
+</html>
