@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mock Coin Exchange - 모의 투자 거래소</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      color: #667eea;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .portfolio {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    
+    .portfolio-item {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    
+    .portfolio-item h3 {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    
+    .portfolio-item p {
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    .main-content {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    @media (max-width: 968px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .chart-section, .trading-section {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .coin-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .coin-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #667eea;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    
+    .coin-btn:hover, .coin-btn.active {
+      background: #764ba2;
+      transform: translateY(-2px);
+    }
+    
+    .price-display {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    
+    .current-price {
+      font-size: 32px;
+      font-weight: bold;
+      color: #667eea;
+    }
+    
+    .price-change {
+      font-size: 18px;
+      margin-top: 5px;
+    }
+    
+    .up {
+      color: #e74c3c;
+    }
+    
+    .down {
+      color: #3498db;
+    }
+    
+    .order-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .order-type {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .order-btn {
+      flex: 1;
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .buy-btn {
+      background: #e74c3c;
+      color: white;
+    }
+    
+    .sell-btn {
+      background: #3498db;
+      color: white;
+    }
+    
+    .order-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .input-group label {
+      font-weight: bold;
+      color: #666;
+    }
+    
+    .input-group input {
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    
+    .input-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .order-summary {
+      background: #f5f7fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    
+    .order-summary p {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    
+    .history-section {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    
+    .history-table th, .history-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .history-table th {
+      background: #667eea;
+      color: white;
+    }
+    
+    .history-table tr:hover {
+      background: #f5f7fa;
+    }
+    
+    .badge {
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .badge-buy {
+      background: #e74c3c;
+      color: white;
+    }
+    
+    .badge-sell {
+      background: #3498db;
+      color: white;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      z-index: 1000;
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    .notification.success {
+      background: #27ae60;
+    }
+    
+    .notification.error {
+      background: #e74c3c;
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🚀 Mock Coin Exchange</h1>
+      <p class="subtitle">실시간 시세 연동 모의 투자 거래소 (가상 자금 10,000,000 원)</p>
+    </header>
+    
+    <div class="portfolio">
+      <h2>💼 내 포트폴리오</h2>
+      <div class="portfolio-grid" id="portfolioGrid">
+        <div class="portfolio-item">
+          <h3>원화 (KRW)</h3>
+          <p id="krwBalance">0 원</p>
+        </div>
+        <div class="portfolio-item">
+          <h3>비트코인 (BTC)</h3>
+          <p id="btcBalance">0 BTC</p>
+        </div>
+        <div class="portfolio-item">
+          <h3>이더리움 (ETH)</h3>
+          <p id="ethBalance">0 ETH</p>
+        </div>
+        <div class="portfolio-item">
+          <h3>리플 (XRP)</h3>
+          <p id="xrpBalance">0 XRP</p>
+        </div>
+        <div class="portfolio-item">
+          <h3>솔라나 (SOL)</h3>
+          <p id="solBalance">0 SOL</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="main-content">
+      <div class="chart-section">
+        <h2>📈 실시간 차트</h2>
+        <div class="coin-selector" id="coinSelector">
+          <button class="coin-btn active" data-coin="BTC">BTC</button>
+          <button class="coin-btn" data-coin="ETH">ETH</button>
+          <button class="coin-btn" data-coin="XRP">XRP</button>
+          <button class="coin-btn" data-coin="SOL">SOL</button>
+        </div>
+        <div class="price-display">
+          <div class="current-price" id="currentPrice">0 원</div>
+          <div class="price-change" id="priceChange">0%</div>
+        </div>
+        <canvas id="priceChart"></canvas>
+      </div>
+      
+      <div class="trading-section">
+        <h2>💱 주문하기</h2>
+        <div class="order-form">
+          <div class="order-type">
+            <button class="order-btn buy-btn" onclick="setOrderType('buy')">매수</button>
+            <button class="order-btn sell-btn" onclick="setOrderType('sell')">매도</button>
+          </div>
+          
+          <div class="input-group">
+            <label>코인 선택</label>
+            <select id="tradeCoin" onchange="updateOrderSummary()">
+              <option value="BTC">BTC (비트코인)</option>
+              <option value="ETH">ETH (이더리움)</option>
+              <option value="XRP">XRP (리플)</option>
+              <option value="SOL">SOL (솔라나)</option>
+            </select>
+          </div>
+          
+          <div class="input-group">
+            <label>수량</label>
+            <input type="number" id="tradeAmount" step="0.0001" min="0.0001" value="0.001" oninput="updateOrderSummary()">
+          </div>
+          
+          <div class="order-summary">
+            <p><span>현재 가격:</span><span id="summaryPrice">0 원</span></p>
+            <p><span>총 금액:</span><span id="summaryTotal">0 원</span></p>
+          </div>
+          
+          <button class="order-btn buy-btn" id="submitOrder" onclick="submitOrder()">매수 주문</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="history-section">
+      <h2>📜 거래 내역</h2>
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>시간</th>
+            <th>구분</th>
+            <th>코인</th>
+            <th>수량</th>
+            <th>가격</th>
+            <th>총액</th>
+          </tr>
+        </thead>
+        <tbody id="historyTable">
+          <tr>
+            <td colspan="6" class="loading">거래 내역이 없습니다.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <script>
+    let currentOrderType = 'buy';
+    let selectedCoin = 'BTC';
+    let prices = {};
+    let chart = null;
+    const socket = io();
+    
+    // 초기 데이터 로드
+    async function init() {
+      await loadPortfolio();
+      await loadPrices();
+      await loadHistory();
+      await loadCandleData(selectedCoin);
+      
+      // WebSocket 으로 실시간 가격 업데이트 수신
+      socket.on('priceUpdate', (data) => {
+        prices = data;
+        updatePriceDisplay();
+        updateOrderSummary();
+      });
+    }
+    
+    // 포트폴리오 로드
+    async function loadPortfolio() {
+      try {
+        const response = await fetch('/api/portfolio');
+        const portfolio = await response.json();
+        
+        document.getElementById('krwBalance').textContent = formatNumber(portfolio.KRW) + ' 원';
+        document.getElementById('btcBalance').textContent = portfolio.BTC.toFixed(6) + ' BTC';
+        document.getElementById('ethBalance').textContent = portfolio.ETH.toFixed(6) + ' ETH';
+        document.getElementById('xrpBalance').textContent = portfolio.XRP.toFixed(2) + ' XRP';
+        document.getElementById('solBalance').textContent = portfolio.SOL.toFixed(6) + ' SOL';
+      } catch (error) {
+        console.error('포트폴리오 로드 오류:', error);
+      }
+    }
+    
+    // 가격 로드
+    async function loadPrices() {
+      try {
+        const response = await fetch('/api/prices');
+        prices = await response.json();
+        updatePriceDisplay();
+      } catch (error) {
+        console.error('가격 로드 오류:', error);
+      }
+    }
+    
+    // 가격 표시 업데이트
+    function updatePriceDisplay() {
+      if (prices[selectedCoin]) {
+        const price = prices[selectedCoin].price;
+        const changeRate = prices[selectedCoin].changeRate * 100;
+        
+        document.getElementById('currentPrice').textContent = formatNumber(price) + ' 원';
+        
+        const changeElement = document.getElementById('priceChange');
+        if (changeRate >= 0) {
+          changeElement.textContent = `▲ ${changeRate.toFixed(2)}%`;
+          changeElement.className = 'price-change up';
+        } else {
+          changeElement.textContent = `▼ ${Math.abs(changeRate).toFixed(2)}%`;
+          changeElement.className = 'price-change down';
+        }
+      }
+    }
+    
+    // 캔들스틱 차트 로드
+    async function loadCandleData(coin) {
+      try {
+        const response = await fetch(`/api/candles/${coin}`);
+        const candles = await response.json();
+        
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        
+        if (chart) {
+          chart.destroy();
+        }
+        
+        const labels = candles.map(c => new Date(c.candle_date_time_kst).toLocaleTimeString());
+        const data = candles.map(c => c.trade_price);
+        
+        chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: `${coin} 가격 (1 분봉)`,
+              data: data,
+              borderColor: '#667eea',
+              backgroundColor: 'rgba(102, 126, 234, 0.1)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true
+              }
+            },
+            scales: {
+              x: {
+                display: true,
+                ticks: {
+                  maxTicksLimit: 10
+                }
+              },
+              y: {
+                display: true
+              }
+            }
+          }
+        });
+      } catch (error) {
+        console.error('차트 데이터 로드 오류:', error);
+      }
+    }
+    
+    // 거래 내역 로드
+    async function loadHistory() {
+      try {
+        const response = await fetch('/api/history');
+        const history = await response.json();
+        
+        const tbody = document.getElementById('historyTable');
+        
+        if (history.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="loading">거래 내역이 없습니다.</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = history.map(trade => `
+          <tr>
+            <td>${new Date(trade.timestamp).toLocaleString()}</td>
+            <td><span class="badge badge-${trade.type.toLowerCase()}">${trade.type}</span></td>
+            <td>${trade.coin}</td>
+            <td>${trade.amount.toFixed(6)}</td>
+            <td>${formatNumber(trade.price)} 원</td>
+            <td>${formatNumber(trade.total)} 원</td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('거래 내역 로드 오류:', error);
+      }
+    }
+    
+    // 주문 타입 설정
+    function setOrderType(type) {
+      currentOrderType = type;
+      const submitBtn = document.getElementById('submitOrder');
+      const buyBtn = document.querySelector('.buy-btn');
+      const sellBtn = document.querySelector('.sell-btn');
+      
+      if (type === 'buy') {
+        submitBtn.textContent = '매수 주문';
+        submitBtn.className = 'order-btn buy-btn';
+      } else {
+        submitBtn.textContent = '매도 주문';
+        submitBtn.className = 'order-btn sell-btn';
+      }
+      
+      updateOrderSummary();
+    }
+    
+    // 주문 요약 업데이트
+    function updateOrderSummary() {
+      const coin = document.getElementById('tradeCoin').value;
+      const amount = parseFloat(document.getElementById('tradeAmount').value) || 0;
+      
+      if (prices[coin]) {
+        const price = prices[coin].price;
+        const total = price * amount;
+        
+        document.getElementById('summaryPrice').textContent = formatNumber(price) + ' 원';
+        document.getElementById('summaryTotal').textContent = formatNumber(total) + ' 원';
+      }
+    }
+    
+    // 주문 제출
+    async function submitOrder() {
+      const coin = document.getElementById('tradeCoin').value;
+      const amount = parseFloat(document.getElementById('tradeAmount').value);
+      
+      if (!amount || amount <= 0) {
+        showNotification('수량을 입력해주세요.', 'error');
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/order', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            type: currentOrderType,
+            coin: coin,
+            amount: amount
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showNotification(`${currentOrderType === 'buy' ? '매수' : '매도'} 완료!`, 'success');
+          await loadPortfolio();
+          await loadHistory();
+        } else {
+          showNotification(result.error, 'error');
+        }
+      } catch (error) {
+        showNotification('주문 처리 중 오류가 발생했습니다.', 'error');
+      }
+    }
+    
+    // 알림 표시
+    function showNotification(message, type) {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+    
+    // 숫자 포맷팅
+    function formatNumber(num) {
+      return num.toLocaleString('ko-KR', { maximumFractionDigits: 2 });
+    }
+    
+    // 코인 선택기 이벤트 리스너
+    document.getElementById('coinSelector').addEventListener('click', (e) => {
+      if (e.target.classList.contains('coin-btn')) {
+        document.querySelectorAll('.coin-btn').forEach(btn => btn.classList.remove('active'));
+        e.target.classList.add('active');
+        selectedCoin = e.target.dataset.coin;
+        document.getElementById('tradeCoin').value = selectedCoin;
+        loadCandleData(selectedCoin);
+        updatePriceDisplay();
+        updateOrderSummary();
+      }
+    });
+    
+    // 페이지 로드 시 초기화
+    init();
+    
+    // 3 초마다 포트폴리오 및 가격 업데이트
+    setInterval(() => {
+      loadPortfolio();
+      updatePriceDisplay();
+    }, 3000);
+  </script>
+</body>
+</html>
